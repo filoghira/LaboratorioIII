@@ -1,3 +1,5 @@
+package user;
+
 import customExceptions.SamePasswordException;
 import customExceptions.UserLoggedInException;
 import customExceptions.UserNotLoggedInException;

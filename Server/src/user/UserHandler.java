@@ -1,3 +1,5 @@
+package user;
+
 import customExceptions.*;
 
 import java.util.concurrent.ConcurrentHashMap;

@@ -1,7 +1,7 @@
 package customExceptions;
 
-public class UserNotLoggedIn extends RuntimeException {
-    public UserNotLoggedIn(String message) {
-        super(message);
+public class UserNotLoggedInException extends CustomException{
+    public UserNotLoggedInException(String username) {
+        super(101, "user.User " + username + " is not logged in.");
     }
 }

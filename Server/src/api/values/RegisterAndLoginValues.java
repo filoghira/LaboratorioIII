@@ -1,6 +1,6 @@
-package api;
+package api.values;
 
-public class RegisterAndLoginValues { //classe che contiene i valori per operazioni register e login
+public class RegisterAndLoginValues extends Values{
     private final String username;
     private final String password;
 

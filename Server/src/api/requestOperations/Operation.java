@@ -1,4 +1,4 @@
-package api.operations;
+package api.requestOperations;
 
 public class Operation { //classe che contiene gli attirbuti delle operazioni
     private final String operation;

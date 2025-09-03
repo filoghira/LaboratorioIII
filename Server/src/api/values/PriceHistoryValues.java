@@ -1,6 +1,6 @@
-package api;
+package api.values;
 
-public class PriceHistoryValues {
+public class PriceHistoryValues extends Values {
     private final String month;
 
     public PriceHistoryValues(String m) {

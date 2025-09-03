@@ -1,7 +1,7 @@
 package customExceptions;
 
 public class InvalidPasswordException extends CustomException{
-    public InvalidPasswordException(String message){
-        super(101, message);
+    public InvalidPasswordException(){
+        super(101, "Invalid password");
     }
 }

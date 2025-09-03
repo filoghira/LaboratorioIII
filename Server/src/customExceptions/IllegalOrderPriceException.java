@@ -1,7 +1,7 @@
 package customExceptions;
 
-public class IllegalOrderPriceException extends RuntimeException {
-  public IllegalOrderPriceException(String message) {
-    super(message);
-  }
+public class IllegalOrderPriceException extends CustomException {
+    public IllegalOrderPriceException() {
+        super(202, "order.Order price must be greater than zero.");
+    }
 }

@@ -1,4 +1,4 @@
-package api.operations;
+package api.requestOperations;
 
 import api.values.PriceHistoryValues;
 

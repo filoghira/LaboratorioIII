@@ -1,4 +1,4 @@
-package api;
+package api.responses;
 
 public class ResponseOperation extends Response {
     private final int orderID;

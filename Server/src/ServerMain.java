@@ -1,7 +1,5 @@
-package server;
+import user.UserHandler;
 
-
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -10,24 +8,23 @@ import java.util.ArrayList;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ServerMain {
 
-    private static final Logger logger = Logger.getLogger("server.log");
+    // TODO: Save logs to a file
+    private static final Logger logger = Logger.getLogger(ServerMain.class.getName());
 
     public static void main(String[] args) {
-
         Properties prop = new Properties();
-        final String CONFIG_FILE = "res/server.config";
-
-        try (FileInputStream fis = new FileInputStream(CONFIG_FILE)) {
-            prop.load(fis);
+        try {
+            prop.load(ServerMain.class.getClassLoader().getResourceAsStream("server.config"));
         } catch (FileNotFoundException e) {
-            logger.error
-            System.err.println("Configuration file not found: " + CONFIG_FILE);
+            logger.log(Level.SEVERE, "Configuration file not found.", e);
             System.exit(1);
         } catch (IOException e) {
-            System.err.println("Error reading configuration file: " + CONFIG_FILE);
+            logger.log(Level.SEVERE, "Error reading configuration file.", e);
             System.exit(1);
         }
 
@@ -35,11 +32,10 @@ public class ServerMain {
         try {
             serverSocket = new ServerSocket(Integer.parseInt(prop.getProperty("port")));
         } catch (NumberFormatException e) {
-            System.err.println("Invalid port number in configuration file.");
+            logger.log(Level.SEVERE, "Invalid port number.", e);
             System.exit(1);
         } catch (IOException e) {
-            // TODO: Use a logger
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Error opening server socket.", e);
             System.exit(1);
         }
 
@@ -48,14 +44,16 @@ public class ServerMain {
         // TODO: Do I need to keep track of client threads?
         ArrayList<ClientThread> clientThreads = new ArrayList<>();
 
+        UserHandler userHandler = new UserHandler();
+
         while (true) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                ClientThread clientThread = new ClientThread(clientSocket);
+                ClientThread clientThread = new ClientThread(clientSocket, userHandler);
                 executorService.submit(clientThread);
                 clientThreads.add(clientThread);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                logger.log(Level.SEVERE, "Error accepting client connection.", e);
             }
         }
     }

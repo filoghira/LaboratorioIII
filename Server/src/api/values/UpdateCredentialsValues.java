@@ -1,6 +1,6 @@
-package api;
+package api.values;
 
-public class UpdateCredentialsValues { //classe che contiene i valori per operazioni updateCredentials
+public class UpdateCredentialsValues extends Values{ //classe che contiene i valori per operazioni updateCredentials
     private final String username;
     private final String oldPassword;
     private final String newPassword;

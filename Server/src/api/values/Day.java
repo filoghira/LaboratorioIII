@@ -1,4 +1,4 @@
-package api;
+package api.values;
 
 public class Day {
     private final int day;

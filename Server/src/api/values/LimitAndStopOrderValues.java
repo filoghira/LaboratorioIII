@@ -1,9 +1,9 @@
-package api;
+package api.values;
 
 public class LimitAndStopOrderValues extends InsertOrderValues{
     private final int price;
 
-    public LimitAndStopOrderValues(String t, int s, int p) {
+    public LimitAndStopOrderValues(OrderDirection t, int s, int p) {
         super(t, s);
         this.price = p;
     }

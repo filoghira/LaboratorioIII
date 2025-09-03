@@ -1,7 +1,7 @@
 package customExceptions;
 
 public class WrongPasswordException extends CustomException{
-    public WrongPasswordException(String message){
-        super(102, message);
+    public WrongPasswordException() {
+        super(102, "Wrong password");
     }
 }

@@ -1,7 +1,7 @@
 package customExceptions;
 
-public class IllegalOrderSizeException extends RuntimeException {
-    public IllegalOrderSizeException(String message) {
-        super(message);
+public class IllegalOrderSizeException extends CustomException {
+    public IllegalOrderSizeException() {
+        super(201, "order.Order size must be greater than zero.");
     }
 }

@@ -1,6 +1,6 @@
-package api;
+package api.values;
 
-public class CancelOrderValues { //classe che contiene i valori per operazioni cancelOrder
+public class CancelOrderValues extends Values{ //classe che contiene i valori per operazioni cancelOrder
     private final int orderId;
 
     public CancelOrderValues(int id) {
