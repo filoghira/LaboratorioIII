@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import static api.values.OrderType.*;
@@ -31,6 +32,12 @@ public class OrderHandler {
     private final ConcurrentSkipListSet<OrderGroup> askOrders;
     private final ConcurrentSkipListSet<OrderGroup> bidOrders;
 
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public ReentrantLock getLock() {
+        return lock;
+    }
+
     public OrderHandler() {
         this.orders = new ConcurrentHashMap<>();
         this.lastOrderID = new AtomicInteger(0);
@@ -40,7 +47,7 @@ public class OrderHandler {
         this.bidOrders = new ConcurrentSkipListSet<>(Comparator.comparingInt(OrderGroup::getPrice).reversed());
     }
 
-    public void executeOrder(Order order) throws OrderNotExecutableException {
+    public synchronized void executeOrder(Order order) throws OrderNotExecutableException {
         if (order == null || order.isDone()) return;
 
         if(order.getOrderType() == STOP || order.getOrderType() == MARKET) {
@@ -160,8 +167,10 @@ public class OrderHandler {
         if (!bidOrders.isEmpty()) {
             int marketPrice = bidOrders.first().getPrice();
             for (Integer price : setAsk) {
-                for (Integer order : stopOrdersBid.get(price)) {
-                    executeOrder(orders.get(order));
+                if (price >= marketPrice) {
+                    for (Integer order : stopOrdersBid.get(price)) {
+                        executeOrder(orders.get(order));
+                    }
                 }
             }
         }
@@ -196,7 +205,7 @@ public class OrderHandler {
         return ID;
     }
 
-    public int insertStopOrder(OrderDirection orderDirection, int size, int price, String username) throws IllegalOrderSizeException, IllegalOrderPriceException, OrderNotExecutableException {
+    public synchronized int insertStopOrder(OrderDirection orderDirection, int size, int price, String username) throws IllegalOrderSizeException, IllegalOrderPriceException, OrderNotExecutableException {
         if (size <= 0) {
             throw new IllegalOrderSizeException();
         }
@@ -259,7 +268,7 @@ public class OrderHandler {
         }
     }
 
-    public void cancelOrder(int orderID, User user) throws WrongUserException, OrderAlreadyCompletedException {
+    public synchronized void cancelOrder(int orderID, User user) throws WrongUserException, OrderAlreadyCompletedException {
         Order order = orders.get(orderID);
 
         if (order == null) return;
@@ -327,5 +336,9 @@ public class OrderHandler {
         }
 
         return history;
+    }
+
+    public ConcurrentHashMap<Integer, Order> getOrders() {
+        return orders;
     }
 }

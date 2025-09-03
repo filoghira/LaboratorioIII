@@ -6,10 +6,13 @@ import customExceptions.UserNotLoggedInException;
 import customExceptions.WrongPasswordException;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
+import java.util.Date;
+
 public class User {
     private final String username;
     private String hashedPassword;
-    private boolean loggedIn = false;
+    private transient boolean loggedIn = false;
+    private transient Date lastActive;
 
     public User(String username, String password) {
         this.username = username;
@@ -49,5 +52,13 @@ public class User {
 
     public String getUsername() {
         return username;
+    }
+
+    public Date getLastActive() {
+        return lastActive;
+    }
+
+    public void setLastActive(Date lastActive) {
+        this.lastActive = lastActive;
     }
 }

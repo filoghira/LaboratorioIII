@@ -14,6 +14,7 @@ import user.UserHandler;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 public class APIHandler {
     public static Response HandleRequest(String request, UserHandler userHandler, User currentUser, OrderHandler orderHandler) {
@@ -137,11 +138,15 @@ public class APIHandler {
                 break;
             }
             case "quit":
-                // TODO: Handle quit operation
-                break;
+                throw new QuitException();
             default:
                 response = new ResponseUser(Response.NOT_HANDLED, "Error while parsing the request");
         }
+
+        if (currentUser != null) {
+            currentUser.setLastActive(new Date());
+        }
+
         return response;
     }
 }
