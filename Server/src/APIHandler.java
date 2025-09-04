@@ -15,9 +15,14 @@ import user.UserHandler;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class APIHandler {
-    public static Response HandleRequest(String request, UserHandler userHandler, User currentUser, OrderHandler orderHandler) {
+
+    private static Logger logger = Logger.getLogger(APIHandler.class.getName());
+
+    public static Response HandleRequest(String request, UserHandler userHandler, User currentUser, OrderHandler orderHandler, String ip) {
         RuntimeTypeAdapterFactory<Operation> runtimeTypeAdapterFactory =
                 RuntimeTypeAdapterFactory
                         .of(Operation.class, "operation", true)
@@ -45,6 +50,7 @@ public class APIHandler {
                 RegisterOperation op = gson.fromJson(request, RegisterOperation.class);
                 RegisterAndLoginValues values = op.getValues();
                 try {
+                    logger.log(Level.WARNING, "Registering user: " + values.getUsername() + " from IP: " + ip);
                     userHandler.register(values.getUsername(), values.getPassword());
                     response = new ResponseUser(Response.OK, "user.User registered successfully");
                 } catch (UserAlreadyExistsException | InvalidPasswordException e) {
@@ -68,7 +74,7 @@ public class APIHandler {
                 LoginOperation op = gson.fromJson(request, LoginOperation.class);
                 RegisterAndLoginValues values = op.getValues();
                 try {
-                    currentUser = userHandler.login(values.getUsername(), values.getPassword());
+                    currentUser = userHandler.login(values.getUsername(), values.getPassword(), ip);
                     response = new ResponseUser(Response.OK, "user.User logged in successfully");
                 } catch (UserNotFoundException | UserLoggedInException | WrongPasswordException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
@@ -88,7 +94,7 @@ public class APIHandler {
                 LimitOrderOperation op = gson.fromJson(request, LimitOrderOperation.class);
                 LimitAndStopOrderValues values = op.getValues();
                 try {
-                    int id = orderHandler.insertLimitOrder(values.getType(), values.getSize(), values.getPrice(), currentUser.getUsername());
+                    int id = orderHandler.insertLimitOrder(values.getType(), values.getSize(), values.getPrice(), currentUser);
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | IllegalOrderPriceException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);
@@ -99,7 +105,7 @@ public class APIHandler {
                 MarketOrderOperation op = gson.fromJson(request, MarketOrderOperation.class);
                 MarketOrderValues values = op.getValues();
                 try {
-                    int id = orderHandler.insertMarketOrder(values.getType(), values.getSize(), currentUser.getUsername());
+                    int id = orderHandler.insertMarketOrder(values.getType(), values.getSize(), currentUser);
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException e) {
                     response = new ResponseOperation(Response.ERROR);
@@ -110,7 +116,7 @@ public class APIHandler {
                 StopOrderOperation op = gson.fromJson(request, StopOrderOperation.class);
                 LimitAndStopOrderValues values = op.getValues();
                 try {
-                    int id = orderHandler.insertStopOrder(values.getType(), values.getSize(), values.getPrice(), currentUser.getUsername());
+                    int id = orderHandler.insertStopOrder(values.getType(), values.getSize(), values.getPrice(), currentUser);
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | IllegalOrderPriceException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);

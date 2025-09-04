@@ -1,4 +1,5 @@
 import database.DumbDatabase;
+import notification.NotificationHandler;
 import order.OrderHandler;
 import user.UserHandler;
 
@@ -30,6 +31,8 @@ public class ServerMain {
             logger.log(Level.SEVERE, "Error reading configuration file.", e);
             System.exit(1);
         }
+
+        NotificationHandler.port = Integer.parseInt(prop.getProperty("notification_port"));
 
         UserHandler userHandler = new UserHandler();
         OrderHandler orderHandler = new OrderHandler();

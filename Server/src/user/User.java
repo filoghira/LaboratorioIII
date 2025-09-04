@@ -4,36 +4,41 @@ import customExceptions.SamePasswordException;
 import customExceptions.UserLoggedInException;
 import customExceptions.UserNotLoggedInException;
 import customExceptions.WrongPasswordException;
-import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 
 import java.util.Date;
 
 public class User {
     private final String username;
-    private String hashedPassword;
+    private String password;
     private transient boolean loggedIn = false;
     private transient Date lastActive;
+    private transient String lastIP;
+
+    public String getLastIP() {
+        return lastIP;
+    }
 
     public User(String username, String password) {
         this.username = username;
-        this.hashedPassword = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8().encode(password);
+        this.password = password;
     }
 
     public void updatePassword(String oldPassword, String newPassword) throws SamePasswordException {
-        if (!Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8().matches(oldPassword, this.hashedPassword)) {
+        if (oldPassword.equals(this.password)) {
             throw new SamePasswordException();
         }
 
-        hashedPassword = Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8().encode(newPassword);
+        password = newPassword;
     }
 
-    public void login(String password) throws UserLoggedInException, WrongPasswordException {
+    public void login(String password, String ip) throws UserLoggedInException, WrongPasswordException {
         if (loggedIn) {
             throw new UserLoggedInException(username);
         }
 
-        if (Argon2PasswordEncoder.defaultsForSpringSecurity_v5_8().matches(password, this.hashedPassword)) {
+        if (password.equals(this.password)) {
             loggedIn = true;
+            lastIP = ip;
         } else {
             throw new WrongPasswordException();
         }
@@ -44,6 +49,7 @@ public class User {
             throw new UserNotLoggedInException(username);
         }
         loggedIn = false;
+        lastIP = null;
     }
 
     public boolean isLoggedIn() {

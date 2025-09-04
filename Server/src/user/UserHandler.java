@@ -52,14 +52,14 @@ public class UserHandler {
         lock.unlock();
     }
 
-    public User login(String username, String password) throws UserNotFoundException, UserLoggedInException, WrongPasswordException {
+    public User login(String username, String password, String ip) throws UserNotFoundException, UserLoggedInException, WrongPasswordException {
         lock.lock();
         if (!userExists(username)) {
             lock.unlock();
             throw new UserNotFoundException(username);
         }
         User user = users.get(username);
-        user.login(password);
+        user.login(password, ip);
         lock.unlock();
         return user;
     }

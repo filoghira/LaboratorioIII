@@ -6,6 +6,7 @@ import api.values.OrderType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import customExceptions.*;
+import notification.NotificationHandler;
 import user.User;
 
 import java.io.InputStream;
@@ -50,6 +51,8 @@ public class OrderHandler {
     public synchronized void executeOrder(Order order) throws OrderNotExecutableException {
         if (order == null || order.isDone()) return;
 
+        ArrayList<User> involvedUsers = new ArrayList<>();
+
         if(order.getOrderType() == STOP || order.getOrderType() == MARKET) {
             Iterator<OrderGroup> it = (order.getDirection() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
             int sum = 0;
@@ -84,6 +87,9 @@ public class OrderHandler {
                     IDs.forEach(id -> this.orders.get(id).execute());
                     IDs.forEach(id -> this.orders.get(id).setTimestamp(new Date().getTime()));
 
+                    involvedUsers.add(order.getUser());
+                    IDs.forEach(id -> involvedUsers.add(this.orders.get(id).getUser()));
+
                     order.updateRemainingSize(orders.getSize());
 
                     if(order.getDirection() == OrderDirection.BID) {
@@ -91,13 +97,17 @@ public class OrderHandler {
                     } else {
                         bidOrders.remove(orders);
                     }
-                } {
+                } else {
                     for (Integer id : IDs) {
                         Order o = this.orders.get(id);
                         if (o.getRemainingSize() <= order.getRemainingSize()) {
                             doneOrders.add(o);
                             o.execute();
                             o.setTimestamp(new Date().getTime());
+
+                            involvedUsers.add(order.getUser());
+                            involvedUsers.add(o.getUser());
+
                             order.updateRemainingSize(o.getRemainingSize());
 
                             orders.setSize(order.getRemainingSize() - o.getRemainingSize());
@@ -116,6 +126,7 @@ public class OrderHandler {
             if (order.getRemainingSize() == 0) {
                 order.execute();
                 order.setTimestamp(new Date().getTime());
+                involvedUsers.add(order.getUser());
                 doneOrders.add(order);
             } else {
                 boolean check = true;
@@ -141,10 +152,11 @@ public class OrderHandler {
         } else {
             order.execute();
             order.setTimestamp(new Date().getTime());
+            involvedUsers.add(order.getUser());
             doneOrders.add(order);
         }
 
-        // TODO: Notification to users about executed orders
+        NotificationHandler.sendNotification(involvedUsers, doneOrders);
 
         checkStopOrders();
     }
@@ -152,6 +164,8 @@ public class OrderHandler {
     private synchronized void checkStopOrders() throws OrderNotExecutableException {
         ConcurrentHashMap.KeySetView<Integer, ArrayList<Integer>> setAsk = this.stopOrdersAsk.keySet();
         ConcurrentHashMap.KeySetView<Integer, ArrayList<Integer>> setBid = this.stopOrdersBid.keySet();
+
+        ArrayList<String> involvedUsers = new ArrayList<>();
 
         if (!askOrders.isEmpty()) {
             int marketPrice = askOrders.first().getPrice();
@@ -176,7 +190,7 @@ public class OrderHandler {
         }
     }
 
-    public int insertLimitOrder(OrderDirection orderDirection, int size, int price, String username) throws IllegalOrderSizeException, IllegalOrderPriceException, OrderNotExecutableException {
+    public int insertLimitOrder(OrderDirection orderDirection, int size, int price, User user) throws IllegalOrderSizeException, IllegalOrderPriceException, OrderNotExecutableException {
         if (size <= 0) {
             throw new IllegalOrderSizeException();
         }
@@ -186,26 +200,26 @@ public class OrderHandler {
         }
 
         int ID = lastOrderID.incrementAndGet();
-        Order order = new Order(ID, orderDirection, OrderType.LIMIT, size, price, username);
+        Order order = new Order(ID, orderDirection, OrderType.LIMIT, size, price, user);
         orders.put(ID, order);
 
         executeOrder(order);
         return ID;
     }
 
-    public int insertMarketOrder(OrderDirection orderDirection, int size, String username) throws IllegalOrderSizeException {
+    public int insertMarketOrder(OrderDirection orderDirection, int size, User user) throws IllegalOrderSizeException {
         if (size <= 0) {
             throw new IllegalOrderSizeException();
         }
 
         int ID = lastOrderID.incrementAndGet();
-        Order order = new Order(ID, orderDirection, MARKET, size, 0, username);
+        Order order = new Order(ID, orderDirection, MARKET, size, 0, user);
         orders.put(ID, order);
 
         return ID;
     }
 
-    public synchronized int insertStopOrder(OrderDirection orderDirection, int size, int price, String username) throws IllegalOrderSizeException, IllegalOrderPriceException, OrderNotExecutableException {
+    public synchronized int insertStopOrder(OrderDirection orderDirection, int size, int price, User user) throws IllegalOrderSizeException, IllegalOrderPriceException, OrderNotExecutableException {
         if (size <= 0) {
             throw new IllegalOrderSizeException();
         }
@@ -215,7 +229,7 @@ public class OrderHandler {
         }
 
         int ID = lastOrderID.incrementAndGet();
-        Order order = new Order(ID, orderDirection, STOP, size, price, username);
+        Order order = new Order(ID, orderDirection, STOP, size, price, user);
         orders.put(ID, order);
 
         switch (orderDirection) {
@@ -273,7 +287,7 @@ public class OrderHandler {
 
         if (order == null) return;
 
-        if (user == null || !order.getUsername().equals(user.getUsername())) {
+        if (user == null || !order.getUser().getUsername().equals(user.getUsername())) {
             throw new WrongUserException(user==null ? "null" : user.getUsername());
         }
 

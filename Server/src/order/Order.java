@@ -2,6 +2,7 @@ package order;
 
 import api.values.OrderDirection;
 import api.values.OrderType;
+import user.User;
 
 public class Order {
     private int orderID;
@@ -11,16 +12,16 @@ public class Order {
     private int price;
     private transient long timestamp;
     private transient int remainingSize;
-    private String username;
+    private User user;
     private transient boolean done;
 
-    public Order(int orderID, OrderDirection type, OrderType orderType, int size, int price, String username) {
+    public Order(int orderID, OrderDirection type, OrderType orderType, int size, int price, User user) {
         this.orderID = orderID;
         this.direction = type;
         this.orderType = orderType;
         this.size = size;
         this.price = price;
-        this.username = username;
+        this.user = user;
         this.timestamp = System.currentTimeMillis();
         this.remainingSize = size;
         this.done = false;
@@ -30,8 +31,8 @@ public class Order {
         return price;
     }
 
-    public String getUsername() {
-        return username;
+    public User getUser() {
+        return user;
     }
 
     public boolean isDone() {

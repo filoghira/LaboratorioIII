@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ResponsePriceHistory extends Response{
     private int code;
     private String message;
-    private ConcurrentHashMap<Integer, Day> days = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, Day> days;
 
     public ResponsePriceHistory(int code, String message, ConcurrentHashMap<Integer, Day> days) {
         this.code = code;
@@ -15,8 +15,8 @@ public class ResponsePriceHistory extends Response{
         this.days = days;
     }
 
-    public Day getDay(int day) {
-        return this.days.getOrDefault(day, null);
+    public ConcurrentHashMap<Integer, Day> getDays() {
+        return days;
     }
 
     public void setDays(ConcurrentHashMap<Integer, Day> days) {

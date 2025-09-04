@@ -61,12 +61,21 @@ public class ClientThread implements Runnable{
                 .create();
 
         while (true) {
-            String message;
+            String message = "";
+            String line;
             try {
-                message = in.readLine();
-                Response response = APIHandler.HandleRequest(message, userHandler, user, orderHandler);
+                line = in.readLine();
+                while (!line.equals("}")) {
+                    message += line;
+                    line = in.readLine();
+                }
+                message += line;
+                
+                logger.log(Level.INFO, "Received message: " + message);
+                Response response = APIHandler.HandleRequest(message, userHandler, user, orderHandler, socket.getInetAddress().toString());
                 if (response != null) {
                     out.println(gson.toJson(response));
+                    logger.log(Level.INFO, "Message sent: " + gson.toJson(response));
                 }
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error reading message", e);
