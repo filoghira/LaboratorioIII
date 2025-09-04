@@ -6,7 +6,7 @@ import api.values.OrderType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import customExceptions.*;
-import notification.NotificationHandler;
+import database.DumbDatabase;
 import user.User;
 
 import java.io.FileNotFoundException;
@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Logger;
 
 import static api.values.OrderType.*;
@@ -34,10 +33,8 @@ public class OrderHandler {
     private final ConcurrentSkipListSet<OrderGroup> askOrders;
     private final ConcurrentSkipListSet<OrderGroup> bidOrders;
 
-    private final ReentrantLock lock = new ReentrantLock();
-
     public OrderHandler() {
-        this.orders = new ConcurrentHashMap<>();
+        this.orders = DumbDatabase.loadOrders();
         this.lastOrderID = new AtomicInteger(0);
         this.stopOrdersAsk = new ConcurrentHashMap<>();
         this.stopOrdersBid = new ConcurrentHashMap<>();

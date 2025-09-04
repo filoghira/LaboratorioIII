@@ -1,12 +1,18 @@
 package user;
 
 import customExceptions.*;
+import database.DumbDatabase;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class UserHandler {
-    private final ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, User> users;
     private final ReentrantLock lock = new ReentrantLock();
+
+    public UserHandler() {
+        users = DumbDatabase.loadUsers();
+    }
 
     public ReentrantLock getLock() {
         return lock;

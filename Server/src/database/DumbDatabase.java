@@ -7,9 +7,11 @@ import order.OrderHandler;
 import user.User;
 import user.UserHandler;
 
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DumbDatabase extends TimerTask {
 
@@ -20,6 +22,36 @@ public class DumbDatabase extends TimerTask {
     public DumbDatabase(OrderHandler orderHandler, UserHandler userHandler) {
         this.orderHandler = orderHandler;
         this.userHandler = userHandler;
+    }
+
+    public static ConcurrentHashMap<String, User> loadUsers(){
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        ConcurrentHashMap<String, User> users = new ConcurrentHashMap<>();
+        try (FileReader fr = new FileReader("userData.json")){
+            User user;
+            while (fr.ready()){
+                user = gson.fromJson(fr, User.class);
+                users.put(user.getUsername(), user);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return users;
+    }
+
+    public static ConcurrentHashMap<Integer, Order> loadOrders(){
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        ConcurrentHashMap<Integer, Order> orders = new ConcurrentHashMap<>();
+        try (FileReader fr = new FileReader("orderData.json")){
+            Order order;
+            while (fr.ready()){
+                order = gson.fromJson(fr, Order.class);
+                orders.put(order.getOrderID(), order);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return orders;
     }
 
     @Override
