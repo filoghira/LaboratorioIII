@@ -36,7 +36,7 @@ public class DumbDatabase extends TimerTask {
         try (FileWriter fw = new FileWriter("orderData.json")){
             for (int i = lastOrderId; i < orderHandler.getOrders().size(); i++) {
                 Order order = orderHandler.getOrders().get(i);
-                if (order.isDone()){
+                if (order != null && order.isDone()){
                     try {
                         fw.write(gson.toJson(order));
                     } catch (IOException e) {

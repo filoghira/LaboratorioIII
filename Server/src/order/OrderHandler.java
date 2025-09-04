@@ -9,6 +9,7 @@ import customExceptions.*;
 import notification.NotificationHandler;
 import user.User;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -47,7 +48,8 @@ public class OrderHandler {
     public synchronized void executeOrder(Order order) throws OrderNotExecutableException {
         if (order == null || order.isDone()) return;
 
-        ArrayList<User> involvedUsers = new ArrayList<>();
+        // TODO: deve essere un set per evitare duplicati
+        Set<User> involvedUsers = new HashSet<>();
 
         if(order.getOrderType() == STOP || order.getOrderType() == MARKET) {
             Iterator<OrderGroup> it = (order.getDirection() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
@@ -61,6 +63,8 @@ public class OrderHandler {
                 throw new OrderNotExecutableException();
             }
         }
+
+        logger.log(java.util.logging.Level.INFO, "Order ID: " + order.getOrderID() + " is executable");
 
         Iterator<OrderGroup> it1 = (order.getDirection() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
         Iterator<OrderGroup> it2 = (order.getDirection() == OrderDirection.ASK ? askOrders : bidOrders).iterator();
@@ -152,7 +156,7 @@ public class OrderHandler {
             doneOrders.add(order);
         }
 
-        NotificationHandler.sendNotification(involvedUsers, doneOrders);
+        // NotificationHandler.sendNotification(involvedUsers, doneOrders);
 
         checkStopOrders();
     }
@@ -212,8 +216,11 @@ public class OrderHandler {
         Order order = new Order(ID, orderDirection, MARKET, size, 0, user);
         orders.put(ID, order);
 
+        logger.log(java.util.logging.Level.INFO, "Inserting market order ID: " + ID + " Direction: " + orderDirection + " Size: " + size + " User: " + (user != null ? user.getUsername() : "null"));
+
         try {
             executeOrder(order);
+            logger.log(java.util.logging.Level.INFO, "Executed market order ID: " + ID);
             return ID;
         } catch (OrderNotExecutableException e) {
             orders.remove(ID);
@@ -311,14 +318,14 @@ public class OrderHandler {
         }
     }
 
-    public ConcurrentHashMap<Integer, Day> getPriceHistory(YearMonth date, User user) {
+    public ConcurrentHashMap<Integer, Day> getPriceHistory(YearMonth date, User user) throws FileNotFoundException {
         if (user == null) return null;
         ConcurrentHashMap<Integer, Day> history = new ConcurrentHashMap<>();
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         ClassLoader classloader = Thread.currentThread().getContextClassLoader();
         try (InputStream is = classloader.getResourceAsStream("priceHistory.json")) {
-            if (is == null) throw new Exception("File not found");
+            if (is == null) throw new FileNotFoundException("priceHistory.json not found");
             Scanner scanner = new Scanner(is);
 
             // Skip the first two lines (the opening bracket and the "trades" key)
@@ -347,6 +354,9 @@ public class OrderHandler {
                 }
             }
 
+        } catch (FileNotFoundException e) {
+            logger.severe("Price history file not found: " + e.getMessage());
+            throw new FileNotFoundException(e.getMessage());
         } catch (Exception e) {
             logger.severe("Error reading price history: " + e.getMessage());
             return null;

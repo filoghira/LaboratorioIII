@@ -12,6 +12,7 @@ import order.OrderHandler;
 import user.User;
 import user.UserHandler;
 
+import java.io.FileNotFoundException;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -111,6 +112,7 @@ public class APIHandler {
                 MarketOrderValues values = op.getValues();
                 try {
                     int id = orderHandler.insertMarketOrder(values.getType(), values.getSize(), currentUser);
+                    logger.log(Level.INFO, "Market order inserted with ID: " + id);
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);
@@ -145,7 +147,11 @@ public class APIHandler {
                 PriceHistoryValues values = op.getValues();
 
                 YearMonth month = YearMonth.parse(values.getMonth(), DateTimeFormatter.ofPattern("MMyyyy"));
-                response = new ResponsePriceHistory(Response.OK, "Price history retrieved successfully", orderHandler.getPriceHistory(month, currentUser));
+                try {
+                    response = new ResponsePriceHistory(Response.OK, "Price history retrieved successfully", orderHandler.getPriceHistory(month, currentUser));
+                } catch (FileNotFoundException e) {
+                    response = new ResponsePriceHistory(Response.ERROR, "Price history not found", null);
+                }
                 break;
             }
             case "quit":

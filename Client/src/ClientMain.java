@@ -180,10 +180,13 @@ public class ClientMain {
                         }
                     } else if (expectedResponse.equals("ResponsePriceHistory")) {
                         ResponsePriceHistory res = gson.fromJson(jsonResponse, ResponsePriceHistory.class);
-                        System.out.println("Price History: ");
-                        if (res.getDays().isEmpty()) {
+
+                        if (res.getCode() == Response.ERROR) {
+                            System.out.println("Error retrieving price history.");
+                        } else if (res.getDays() == null || res.getDays().isEmpty()) {
                             System.out.println("No data available for the requested month.");
                         } else {
+                            System.out.println("Price History: ");
                             res.getDays().forEach((day, values) -> System.out.println("Day " + day + ": Open=" + values.getOpeningPrice() + ", Close=" + values.getClosingPrice() + ", High=" + values.getMaxPrice() + ", Low=" + values.getMinPrice()));
                         }
 
