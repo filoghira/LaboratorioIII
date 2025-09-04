@@ -127,7 +127,7 @@ public class ClientMain {
                     }
                     CancelOrderValues cancelValues = new CancelOrderValues(Integer.parseInt(words[1]));
                     operation = new api.requestOperations.CancelOrderOperation("cancelOrder", cancelValues);
-                    expectedResponse = "ResponseOperation";
+                    expectedResponse = "ResponseUser";
                     break;
                 case "getPriceHistory":
                     if (words.length < 2) {
@@ -166,13 +166,17 @@ public class ClientMain {
 
                     if (expectedResponse.equals("ResponseUser")) {
                         ResponseUser res = gson.fromJson(jsonResponse, ResponseUser.class);
-                        System.out.println("Code: " + res.getResponse() + " - Message: " + res.getErrorMessage());
-                    } else if (expectedResponse.equals("ResponseOperation")) {
-                        ResponseUser res = gson.fromJson(jsonResponse, ResponseUser.class);
                         if (res.getResponse() == Response.OK) {
-                            System.out.println("Operation successful.");
+                            System.out.println("Success: " + res.getErrorMessage());
                         } else {
-                            System.out.println("Operation failed: " + res.getErrorMessage());
+                            System.out.println("Code: " + res.getResponse() + " - Message: " + res.getErrorMessage());
+                        }
+                    } else if (expectedResponse.equals("ResponseOperation")) {
+                        ResponseOperation res = gson.fromJson(jsonResponse, ResponseOperation.class);
+                        if (res.getOrderID() != -1) {
+                            System.out.println("Operation successful. ID: " + res.getOrderID());
+                        } else {
+                            System.out.println("Operation failed.");
                         }
                     } else if (expectedResponse.equals("ResponsePriceHistory")) {
                         ResponsePriceHistory res = gson.fromJson(jsonResponse, ResponsePriceHistory.class);

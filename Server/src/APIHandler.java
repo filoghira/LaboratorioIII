@@ -112,7 +112,7 @@ public class APIHandler {
                 try {
                     int id = orderHandler.insertMarketOrder(values.getType(), values.getSize(), currentUser);
                     response = new ResponseOperation(id);
-                } catch (IllegalOrderSizeException e) {
+                } catch (IllegalOrderSizeException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);
                 }
                 break;

@@ -203,7 +203,7 @@ public class OrderHandler {
         return ID;
     }
 
-    public int insertMarketOrder(OrderDirection orderDirection, int size, User user) throws IllegalOrderSizeException {
+    public int insertMarketOrder(OrderDirection orderDirection, int size, User user) throws IllegalOrderSizeException, OrderNotExecutableException {
         if (size <= 0) {
             throw new IllegalOrderSizeException();
         }
@@ -212,7 +212,13 @@ public class OrderHandler {
         Order order = new Order(ID, orderDirection, MARKET, size, 0, user);
         orders.put(ID, order);
 
-        return ID;
+        try {
+            executeOrder(order);
+            return ID;
+        } catch (OrderNotExecutableException e) {
+            orders.remove(ID);
+            throw new OrderNotExecutableException();
+        }
     }
 
     public synchronized int insertStopOrder(OrderDirection orderDirection, int size, int price, User user) throws IllegalOrderSizeException, IllegalOrderPriceException, OrderNotExecutableException {
