@@ -35,10 +35,6 @@ public class OrderHandler {
 
     private final ReentrantLock lock = new ReentrantLock();
 
-    public ReentrantLock getLock() {
-        return lock;
-    }
-
     public OrderHandler() {
         this.orders = new ConcurrentHashMap<>();
         this.lastOrderID = new AtomicInteger(0);
@@ -282,10 +278,11 @@ public class OrderHandler {
         }
     }
 
-    public synchronized void cancelOrder(int orderID, User user) throws WrongUserException, OrderAlreadyCompletedException {
+    public synchronized void cancelOrder(int orderID, User user) throws WrongUserException, OrderAlreadyCompletedException, InvalidOrderException {
         Order order = orders.get(orderID);
+        logger.log(java.util.logging.Level.INFO, "Attempting to cancel order ID: " + orderID + " by user: " + (user != null ? user.getUsername() : "null"));
 
-        if (order == null) return;
+        if (order == null) throw new InvalidOrderException();
 
         if (user == null || !order.getUser().getUsername().equals(user.getUsername())) {
             throw new WrongUserException(user==null ? "null" : user.getUsername());

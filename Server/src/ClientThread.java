@@ -22,6 +22,10 @@ public class ClientThread implements Runnable{
     private User user;
     private final OrderHandler orderHandler;
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public ClientThread(Socket socket, UserHandler userHandler, OrderHandler orderHandler) {
         this.socket = socket;
         this.userHandler = userHandler;
@@ -72,7 +76,7 @@ public class ClientThread implements Runnable{
                 message += line;
                 
                 logger.log(Level.INFO, "Received message: " + message);
-                Response response = APIHandler.HandleRequest(message, userHandler, user, orderHandler, socket.getInetAddress().toString());
+                Response response = APIHandler.HandleRequest(this, message, userHandler, user, orderHandler, socket.getInetAddress().toString());
                 if (response != null) {
                     out.println(gson.toJson(response));
                     logger.log(Level.INFO, "Message sent: " + gson.toJson(response));

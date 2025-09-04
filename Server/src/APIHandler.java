@@ -20,9 +20,9 @@ import java.util.logging.Logger;
 
 public class APIHandler {
 
-    private static Logger logger = Logger.getLogger(APIHandler.class.getName());
+    private static final Logger logger = Logger.getLogger(APIHandler.class.getName());
 
-    public static Response HandleRequest(String request, UserHandler userHandler, User currentUser, OrderHandler orderHandler, String ip) {
+    public static Response HandleRequest(ClientThread thread, String request, UserHandler userHandler, User currentUser, OrderHandler orderHandler, String ip) {
         RuntimeTypeAdapterFactory<Operation> runtimeTypeAdapterFactory =
                 RuntimeTypeAdapterFactory
                         .of(Operation.class, "operation", true)
@@ -44,6 +44,10 @@ public class APIHandler {
 
         Operation oJson = gson.fromJson(request, Operation.class);
         Response response = null;
+
+        if (currentUser == null && !oJson.getOperation().equals("login") && !oJson.getOperation().equals("register")) {
+            return new ResponseUser(Response.ERROR, "You must be logged in to perform this operation");
+        }
 
         switch (oJson.getOperation()) {
             case "register": {
@@ -74,7 +78,7 @@ public class APIHandler {
                 LoginOperation op = gson.fromJson(request, LoginOperation.class);
                 RegisterAndLoginValues values = op.getValues();
                 try {
-                    currentUser = userHandler.login(values.getUsername(), values.getPassword(), ip);
+                    thread.setUser(userHandler.login(values.getUsername(), values.getPassword(), ip));
                     response = new ResponseUser(Response.OK, "user.User logged in successfully");
                 } catch (UserNotFoundException | UserLoggedInException | WrongPasswordException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
@@ -84,7 +88,8 @@ public class APIHandler {
             case "logout": {
                 try {
                     userHandler.logout(currentUser.getUsername());
-                    currentUser = null;
+                    thread.setUser(null);
+                    response = new ResponseUser(Response.OK, "user.User logged out successfully");
                 } catch (UserNotFoundException | UserNotLoggedInException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }
@@ -130,7 +135,7 @@ public class APIHandler {
                 try {
                     orderHandler.cancelOrder(values.getOrderId(), currentUser);
                     response = new ResponseUser(Response.OK, "order.Order cancelled successfully");
-                } catch (WrongUserException | OrderAlreadyCompletedException e) {
+                } catch (WrongUserException | OrderAlreadyCompletedException | InvalidOrderException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }
                 break;
@@ -144,6 +149,11 @@ public class APIHandler {
                 break;
             }
             case "quit":
+                if (currentUser != null) {
+                    try {
+                        userHandler.logout(currentUser.getUsername());
+                    } catch (UserNotFoundException | UserNotLoggedInException ignored) {}
+                }
                 throw new QuitException();
             default:
                 response = new ResponseUser(Response.NOT_HANDLED, "Error while parsing the request");

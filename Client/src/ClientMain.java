@@ -168,11 +168,11 @@ public class ClientMain {
                         ResponseUser res = gson.fromJson(jsonResponse, ResponseUser.class);
                         System.out.println("Code: " + res.getResponse() + " - Message: " + res.getErrorMessage());
                     } else if (expectedResponse.equals("ResponseOperation")) {
-                        ResponseOperation res = gson.fromJson(jsonResponse, ResponseOperation.class);
-                        if (res.getOrderID() != -1) {
-                            System.out.println("Operation successful. ID: " + res.getOrderID());
+                        ResponseUser res = gson.fromJson(jsonResponse, ResponseUser.class);
+                        if (res.getResponse() == Response.OK) {
+                            System.out.println("Operation successful.");
                         } else {
-                            System.out.println("Operation failed.");
+                            System.out.println("Operation failed: " + res.getErrorMessage());
                         }
                     } else if (expectedResponse.equals("ResponsePriceHistory")) {
                         ResponsePriceHistory res = gson.fromJson(jsonResponse, ResponsePriceHistory.class);
