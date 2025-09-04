@@ -5,19 +5,19 @@ import api.values.OrderType;
 import user.User;
 
 public class Order {
-    private int orderID;
-    private OrderDirection direction;
+    private int orderId;
+    private OrderDirection type;
     private OrderType orderType;
     private int size;
     private int price;
-    private transient long timestamp;
+    private long timestamp;
     private transient int remainingSize;
-    private User user;
+    private transient User user;
     private transient boolean done;
 
     public Order(int orderID, OrderDirection type, OrderType orderType, int size, int price, User user) {
-        this.orderID = orderID;
-        this.direction = type;
+        this.orderId = orderID;
+        this.type = type;
         this.orderType = orderType;
         this.size = size;
         this.price = price;
@@ -43,12 +43,12 @@ public class Order {
         this.done = true;
     }
 
-    public int getOrderID() {
-        return orderID;
+    public int getOrderId() {
+        return orderId;
     }
 
-    public OrderDirection getDirection() {
-        return direction;
+    public OrderDirection getType() {
+        return type;
     }
 
     public OrderType getOrderType() {
@@ -60,7 +60,7 @@ public class Order {
     }
 
     public long getTimestamp() {
-        return timestamp;
+        return timestamp*1000;
     }
 
     public void setPrice(int price) {
@@ -68,7 +68,7 @@ public class Order {
     }
 
     public void setTimestamp(long timestamp) {
-        this.timestamp = timestamp;
+        this.timestamp = timestamp/1000;
     }
 
     public void updateRemainingSize(int executedSize) {

@@ -12,7 +12,7 @@ public class OrderGroup {
         this.price = price;
         this.size = size;
         this.orders = new ArrayList<>();
-        this.orders.add(order.getOrderID());
+        this.orders.add(order.getOrderId());
     }
 
     public ArrayList<Integer> getOrders() {
@@ -37,7 +37,7 @@ public class OrderGroup {
         }
 
         if (orders.getPrice() >= order.getPrice()) {
-            orders.getOrders().remove((Integer) order.getOrderID());
+            orders.getOrders().remove((Integer) order.getOrderId());
             if (orders.getOrders().isEmpty()) {
                 askOrders.remove(orders);
             } else {

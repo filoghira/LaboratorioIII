@@ -1,7 +1,11 @@
 package api.values;
 
+import com.google.gson.annotations.SerializedName;
+
 public enum OrderDirection {
+    @SerializedName("bid")
     BID,
+    @SerializedName("ask")
     ASK;
 
     public static OrderDirection fromString(String s) {

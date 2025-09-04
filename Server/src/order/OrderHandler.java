@@ -9,7 +9,9 @@ import customExceptions.*;
 import database.DumbDatabase;
 import user.User;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
@@ -49,7 +51,7 @@ public class OrderHandler {
         Set<User> involvedUsers = new HashSet<>();
 
         if(order.getOrderType() == STOP || order.getOrderType() == MARKET) {
-            Iterator<OrderGroup> it = (order.getDirection() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
+            Iterator<OrderGroup> it = (order.getType() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
             int sum = 0;
             while (it.hasNext()) {
                 OrderGroup group = it.next();
@@ -61,10 +63,10 @@ public class OrderHandler {
             }
         }
 
-        logger.log(java.util.logging.Level.INFO, "Order ID: " + order.getOrderID() + " is executable");
+        logger.log(java.util.logging.Level.INFO, "Order ID: " + order.getOrderId() + " is executable");
 
-        Iterator<OrderGroup> it1 = (order.getDirection() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
-        Iterator<OrderGroup> it2 = (order.getDirection() == OrderDirection.ASK ? askOrders : bidOrders).iterator();
+        Iterator<OrderGroup> it1 = (order.getType() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
+        Iterator<OrderGroup> it2 = (order.getType() == OrderDirection.ASK ? askOrders : bidOrders).iterator();
 
         ArrayList<Order> doneOrders = new ArrayList<>();
 
@@ -72,8 +74,8 @@ public class OrderHandler {
             OrderGroup orders = it1.next();
 
             if(!order.getOrderType().equals(LIMIT) ||
-                    (order.getDirection() == OrderDirection.BID && orders.getPrice() <= order.getPrice()) ||
-                    (order.getDirection() == OrderDirection.ASK && orders.getPrice() >= order.getPrice())
+                    (order.getType() == OrderDirection.BID && orders.getPrice() <= order.getPrice()) ||
+                    (order.getType() == OrderDirection.ASK && orders.getPrice() >= order.getPrice())
             ) {
                 ArrayList<Integer> IDs = orders.getOrders();
                 if(order.getOrderType() == MARKET) order.setPrice(orders.getPrice());
@@ -89,7 +91,7 @@ public class OrderHandler {
 
                     order.updateRemainingSize(orders.getSize());
 
-                    if(order.getDirection() == OrderDirection.BID) {
+                    if(order.getType() == OrderDirection.BID) {
                         askOrders.remove(orders);
                     } else {
                         bidOrders.remove(orders);
@@ -131,7 +133,7 @@ public class OrderHandler {
                     OrderGroup orders = it2.next();
                     if (orders.getPrice() == order.getPrice()) {
                         orders.setSize(orders.getSize() + order.getRemainingSize());
-                        orders.getOrders().add(order.getOrderID());
+                        orders.getOrders().add(order.getOrderId());
                         check = false;
                         break;
                     }
@@ -139,7 +141,7 @@ public class OrderHandler {
 
                 if (check) {
                     OrderGroup orders = new OrderGroup(order.getPrice(), order.getRemainingSize(), order);
-                    if (order.getDirection() == OrderDirection.ASK) {
+                    if (order.getType() == OrderDirection.ASK) {
                         askOrders.add(orders);
                     } else {
                         bidOrders.add(orders);
@@ -255,15 +257,15 @@ public class OrderHandler {
     }
 
     private void removeStop(Order order) {
-        switch (order.getDirection()) {
+        switch (order.getType()) {
             case ASK:
-                stopOrdersAsk.get(order.getPrice()).remove((Integer) order.getOrderID());
+                stopOrdersAsk.get(order.getPrice()).remove((Integer) order.getOrderId());
                 if (stopOrdersAsk.get(order.getPrice()).isEmpty()) {
                     stopOrdersAsk.remove(order.getPrice());
                 }
                 break;
             case BID:
-                stopOrdersBid.get(order.getPrice()).remove((Integer) order.getOrderID());
+                stopOrdersBid.get(order.getPrice()).remove((Integer) order.getOrderId());
                 if (stopOrdersBid.get(order.getPrice()).isEmpty()) {
                     stopOrdersBid.remove(order.getPrice());
                 }
@@ -272,7 +274,7 @@ public class OrderHandler {
     }
 
     private void removeLimit(Order order) {
-        switch (order.getDirection()) {
+        switch (order.getType()) {
             case ASK:
                 for (OrderGroup orders : askOrders) {
                     OrderGroup.removeOrderFromGroup(orders, order, askOrders);
@@ -299,10 +301,10 @@ public class OrderHandler {
         }
 
         if (order.isDone()) {
-            throw new OrderAlreadyCompletedException(order.getOrderID());
+            throw new OrderAlreadyCompletedException(order.getOrderId());
         }
 
-        orders.remove(order.getOrderID());
+        orders.remove(order.getOrderId());
         switch (order.getOrderType()) {
             case STOP:
                 removeStop(order);
@@ -311,52 +313,27 @@ public class OrderHandler {
                 removeLimit(order);
                 break;
             case MARKET:
-                throw new OrderAlreadyCompletedException(order.getOrderID());
+                throw new OrderAlreadyCompletedException(order.getOrderId());
         }
     }
 
     public ConcurrentHashMap<Integer, Day> getPriceHistory(YearMonth date, User user) throws FileNotFoundException {
         if (user == null) return null;
         ConcurrentHashMap<Integer, Day> history = new ConcurrentHashMap<>();
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-        ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-        try (InputStream is = classloader.getResourceAsStream("priceHistory.json")) {
-            if (is == null) throw new FileNotFoundException("priceHistory.json not found");
-            Scanner scanner = new Scanner(is);
-
-            // Skip the first two lines (the opening bracket and the "trades" key)
-            scanner.nextLine();
-            scanner.nextLine();
-
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                Order order = gson.fromJson(line.charAt(0) == ',' ? line.substring(1) : line, Order.class);
-                LocalDateTime orderDate = LocalDateTime.ofEpochSecond(order.getTimestamp(), 0, ZoneOffset.of("+02:00"));
-
-                if (orderDate.getYear() == date.getYear() && orderDate.getMonth() == date.getMonth()) {
-                    Day day = history.get(orderDate.getDayOfMonth());
-                    if (day != null) {
-                        if (order.getPrice() > day.getMaxPrice()) {
-                            day.setMaxPrice(order.getPrice());
-                        }
-                        if (order.getPrice() < day.getMinPrice()) {
-                            day.setMinPrice(order.getPrice());
-                        }
-                        day.setClosingPrice(order.getPrice());
-                    } else {
-                        day = new Day(orderDate.getDayOfMonth(), order.getPrice(), order.getPrice(), order.getPrice(), order.getPrice());
-                        history.put(orderDate.getDayOfMonth(), day);
-                    }
+        for(Order order : orders.values()) {
+            LocalDateTime ldt = LocalDateTime.ofInstant(new Date(order.getTimestamp()).toInstant(), ZoneOffset.UTC);
+            if (order.isDone() && YearMonth.from(ldt).equals(date)) {
+                int day = ldt.getDayOfMonth();
+                if (!history.containsKey(day)) {
+                    history.put(day, new Day(day, order.getPrice(), order.getPrice(), order.getPrice(), order.getPrice()));
+                } else {
+                    Day d = history.get(day);
+                    d.setClosingPrice(order.getPrice());
+                    if (order.getPrice() > d.getMaxPrice()) d.setMaxPrice(order.getPrice());
+                    if (order.getPrice() < d.getMinPrice()) d.setMinPrice(order.getPrice());
                 }
             }
-
-        } catch (FileNotFoundException e) {
-            logger.severe("Price history file not found: " + e.getMessage());
-            throw new FileNotFoundException(e.getMessage());
-        } catch (Exception e) {
-            logger.severe("Error reading price history: " + e.getMessage());
-            return null;
         }
 
         return history;
