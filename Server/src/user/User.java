@@ -24,7 +24,7 @@ public class User {
     }
 
     public void updatePassword(String oldPassword, String newPassword) throws SamePasswordException {
-        if (oldPassword.equals(this.password)) {
+        if (oldPassword.equals(newPassword)) {
             throw new SamePasswordException();
         }
 

@@ -46,7 +46,7 @@ public class APIHandler {
         Operation oJson = gson.fromJson(request, Operation.class);
         Response response = null;
 
-        if (currentUser == null && !oJson.getOperation().equals("login") && !oJson.getOperation().equals("register")) {
+        if (currentUser == null && !oJson.getOperation().equals("login") && !oJson.getOperation().equals("register") && !oJson.getOperation().equals("updateCredentials") && !oJson.getOperation().equals("quit")) {
             return new ResponseUser(Response.ERROR, "You must be logged in to perform this operation");
         }
 
@@ -69,8 +69,8 @@ public class APIHandler {
                 try {
                     userHandler.updatePassword(values.getUsername(), values.getOldPassword(), values.getNewPassword());
                     response = new ResponseUser(Response.OK, "Password updated successfully");
-                } catch (SamePasswordException | UserNotFoundException |
-                         InvalidPasswordException e) {
+                } catch (SamePasswordException | UserNotFoundException | InvalidPasswordException |
+                         UserLoggedInException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }
                 break;

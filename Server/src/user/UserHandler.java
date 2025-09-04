@@ -37,13 +37,17 @@ public class UserHandler {
         lock.unlock();
     }
 
-    public void updatePassword(String username, String oldPassword, String newPassword) throws SamePasswordException, InvalidPasswordException, UserNotFoundException {
+    public void updatePassword(String username, String oldPassword, String newPassword) throws SamePasswordException, InvalidPasswordException, UserNotFoundException, UserLoggedInException {
         lock.lock();
+        if (users.get(username).isLoggedIn()){
+            lock.unlock();
+            throw new UserLoggedInException(username);
+        }
         if (!userExists(username)) {
             lock.unlock();
             throw new UserNotFoundException(username);
         }
-        if (isPasswordInvalid(oldPassword)) {
+        if (isPasswordInvalid(newPassword)) {
             lock.unlock();
             throw new InvalidPasswordException();
         }
