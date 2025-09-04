@@ -80,7 +80,7 @@ public class APIHandler {
                 RegisterAndLoginValues values = op.getValues();
                 try {
                     thread.setUser(userHandler.login(values.getUsername(), values.getPassword(), ip));
-                    response = new ResponseUser(Response.OK, "user.User logged in successfully");
+                    response = new ResponseUser(Response.OK, "Welcome " + values.getUsername());
                 } catch (UserNotFoundException | UserLoggedInException | WrongPasswordException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }
@@ -90,7 +90,7 @@ public class APIHandler {
                 try {
                     userHandler.logout(currentUser.getUsername());
                     thread.setUser(null);
-                    response = new ResponseUser(Response.OK, "user.User logged out successfully");
+                    response = new ResponseUser(Response.OK, "Goodbye " + currentUser.getUsername());
                 } catch (UserNotFoundException | UserNotLoggedInException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }
@@ -136,7 +136,7 @@ public class APIHandler {
 
                 try {
                     orderHandler.cancelOrder(values.getOrderId(), currentUser);
-                    response = new ResponseUser(Response.OK, "order.Order cancelled successfully");
+                    response = new ResponseUser(Response.OK, "Order with ID " + values.getOrderId() + " cancelled successfully");
                 } catch (WrongUserException | OrderAlreadyCompletedException | InvalidOrderException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }

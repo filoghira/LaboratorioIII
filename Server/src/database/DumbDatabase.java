@@ -49,9 +49,10 @@ public class DumbDatabase extends TimerTask {
         return users;
     }
 
-    public static ConcurrentHashMap<Integer, Order> loadOrders(){
+    public static LoadOrdersReturnValue loadOrders(){
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         ConcurrentHashMap<Integer, Order> orders = new ConcurrentHashMap<>();
+        int maxId = 0;
         try (BufferedReader fr = new BufferedReader(new FileReader("orderData.json"))){
             Order order;
             fr.readLine();
@@ -63,11 +64,12 @@ public class DumbDatabase extends TimerTask {
                 order = gson.fromJson(line, Order.class);
                 order.execute();
                 orders.put(order.getOrderId(), order);
+                if (order.getOrderId() > maxId) maxId = order.getOrderId();
             }
         } catch (IOException e) {
-            return orders;
+            return new LoadOrdersReturnValue(maxId, orders);
         }
-        return orders;
+        return new LoadOrdersReturnValue(maxId, orders);
     }
 
     @Override

@@ -36,8 +36,8 @@ public class OrderHandler {
     private final ConcurrentSkipListSet<OrderGroup> bidOrders;
 
     public OrderHandler() {
-        this.orders = DumbDatabase.loadOrders();
-        this.lastOrderID = new AtomicInteger(0);
+        this.orders = DumbDatabase.loadOrders().getOrders();
+        this.lastOrderID = new AtomicInteger(DumbDatabase.loadOrders().getMaxId());
         this.stopOrdersAsk = new ConcurrentHashMap<>();
         this.stopOrdersBid = new ConcurrentHashMap<>();
         this.askOrders = new ConcurrentSkipListSet<>(Comparator.comparingInt(OrderGroup::getPrice));
