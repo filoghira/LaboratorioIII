@@ -38,6 +38,7 @@ public class APIHandler {
             OrderHandler orderHandler,
             InetAddress ip
     ) {
+        logger.log(Level.INFO, "[APIHandler] [HandleRequest] [Request: " + request + "]");
         // TypeAdapterFactory to handle the different subtypes of Request
         RuntimeTypeAdapterFactory<Operation> runtimeTypeAdapterFactory =
                 RuntimeTypeAdapterFactory
@@ -62,6 +63,7 @@ public class APIHandler {
         Response response;
 
         // If the user is not logged in and the request can only be performed after that
+        thread.currentUserLock.lock();
         if (
                 thread.getUser() == null
                 && !oJson.getOperation().equals("login")
@@ -69,8 +71,11 @@ public class APIHandler {
                 && !oJson.getOperation().equals("updateCredentials")
                 && !oJson.getOperation().equals("quit")
         ) {
+            thread.currentUserLock.unlock();
             return new ResponseUser(Response.ERROR, "You must be logged in to perform this operation");
         }
+        thread.currentUserLock.unlock();
+        logger.log(Level.INFO, "Login check executed, operation allowed.");
 
         // Call the right function for each request and create the right subtype of response
         switch (oJson.getOperation()) {
@@ -103,10 +108,15 @@ public class APIHandler {
                 RegisterAndLoginValues values = op.getValues();
                 try {
                     // Set current user in the thread
+                    logger.log(Level.INFO, "Trying to login");
+                    thread.currentUserLock.lock();
                     thread.setUser(userHandler.login(values.getUsername(), values.getPassword(), ip));
+                    thread.currentUserLock.unlock();
+                    logger.log(Level.INFO, "User logged in successfully");
                     response = new ResponseUser(Response.OK, "Welcome " + values.getUsername());
                 } catch (UserNotFoundException | UserLoggedInException | WrongPasswordException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
+                    thread.currentUserLock.unlock();
                 }
                 break;
             }
@@ -114,14 +124,14 @@ public class APIHandler {
                 try {
                     thread.currentUserLock.lock();
                     if (thread.getUser() == null) {
-                        thread.currentUserLock.unlock();
                         throw new UserNotLoggedInException("null");
                     }
                     userHandler.logout(thread.getUser().getUsername());
                     thread.setUser(null);
-                    thread.currentUserLock.unlock();
                     response = new ResponseUser(Response.OK, "Goodbye " + thread.getUser().getUsername());
+                    thread.currentUserLock.unlock();
                 } catch (UserNotFoundException | UserNotLoggedInException e) {
+                    thread.currentUserLock.unlock();
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }
                 break;
@@ -130,12 +140,14 @@ public class APIHandler {
                 LimitOrderOperation op = gson.fromJson(request, LimitOrderOperation.class);
                 LimitAndStopOrderValues values = op.getValues();
                 try {
+                    thread.currentUserLock.lock();
                     int id = orderHandler.insertLimitOrder(
                             values.getType(),
                             values.getSize(),
                             values.getPrice(),
                             thread.getUser()
                     );
+                    thread.currentUserLock.unlock();
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | IllegalOrderPriceException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);
@@ -146,11 +158,13 @@ public class APIHandler {
                 MarketOrderOperation op = gson.fromJson(request, MarketOrderOperation.class);
                 MarketOrderValues values = op.getValues();
                 try {
+                    thread.currentUserLock.lock();
                     int id = orderHandler.insertMarketOrder(
                             values.getType(),
                             values.getSize(),
                             thread.getUser()
                     );
+                    thread.currentUserLock.unlock();
                     logger.log(Level.INFO, "Market order inserted with ID: " + id);
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | OrderNotExecutableException e) {
@@ -162,12 +176,14 @@ public class APIHandler {
                 StopOrderOperation op = gson.fromJson(request, StopOrderOperation.class);
                 LimitAndStopOrderValues values = op.getValues();
                 try {
+                    thread.currentUserLock.lock();
                     int id = orderHandler.insertStopOrder(
                             values.getType(),
                             values.getSize(),
                             values.getPrice(),
                             thread.getUser()
                     );
+                    thread.currentUserLock.unlock();
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | IllegalOrderPriceException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);
@@ -179,7 +195,9 @@ public class APIHandler {
                 CancelOrderValues values = op.getValues();
 
                 try {
+                    thread.currentUserLock.lock();
                     orderHandler.cancelOrder(values.getOrderId(), thread.getUser());
+                    thread.currentUserLock.unlock();
                     response = new ResponseUser(
                             Response.OK,
                             "Order with ID " + values.getOrderId() + " cancelled successfully"
@@ -194,11 +212,13 @@ public class APIHandler {
                 PriceHistoryValues values = op.getValues();
 
                 YearMonth month = YearMonth.parse(values.getMonth(), DateTimeFormatter.ofPattern("MMyyyy"));
+                thread.currentUserLock.lock();
                 response = new ResponsePriceHistory(
                         Response.OK,
                         "Price history retrieved successfully",
                         orderHandler.getPriceHistory(month, thread.getUser())
                 );
+                thread.currentUserLock.unlock();
                 break;
             }
             case "quit":
@@ -209,19 +229,12 @@ public class APIHandler {
                     } catch (UserNotFoundException | UserNotLoggedInException ignored) {
                         thread.currentUserLock.unlock();
                     }
-                    thread.currentUserLock.unlock();
                 }
+                thread.currentUserLock.unlock();
                 throw new QuitException();
             default:
                 response = new ResponseUser(Response.NOT_HANDLED, "Error while parsing the request");
         }
-
-        // Update the last active timestamp for the current user
-        thread.currentUserLock.lock();
-        if (thread.getUser() != null) {
-            thread.getUser().setLastActive(new Date());
-        }
-        thread.currentUserLock.unlock();
 
         return response;
     }

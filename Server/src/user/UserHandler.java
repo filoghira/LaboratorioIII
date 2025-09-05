@@ -4,6 +4,7 @@ import customExceptions.*;
 import database.DumbDatabase;
 
 import java.net.InetAddress;
+import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -107,6 +108,7 @@ public class UserHandler {
         }
         User user = users.get(username);
         user.login(password, ip);
+        user.setLastActive(new Date());
         lock.unlock();
         return user;
     }

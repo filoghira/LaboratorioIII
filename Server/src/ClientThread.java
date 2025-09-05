@@ -9,6 +9,7 @@ import user.UserHandler;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Date;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,11 +25,11 @@ public class ClientThread implements Runnable{
     private final OrderHandler orderHandler;
     public final ReentrantLock currentUserLock = new ReentrantLock();
 
-    synchronized public void setUser(User user) {
+    public void setUser(User user) {
         this.user = user;
     }
 
-    synchronized public User getUser() {
+    public User getUser() {
         return user;
     }
 
@@ -109,6 +110,12 @@ public class ClientThread implements Runnable{
                 message.append(line);
                 logger.log(Level.INFO, "Received message: " + message);
 
+                currentUserLock.lock();
+                if (user != null)
+                    user.setLastActive(new Date());
+                currentUserLock.unlock();
+                logger.log(Level.INFO, "Last active updated");
+
                 // Handle it
                 Response ret = APIHandler.HandleRequest(
                         this,
@@ -121,6 +128,7 @@ public class ClientThread implements Runnable{
                 // Answer
                 out.println(gson.toJson(ret));
                 logger.log(Level.INFO, "Message sent: " + gson.toJson(ret));
+                logger.log(Level.INFO, "Current user: " + user.getUsername());
 
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error reading message", e);
