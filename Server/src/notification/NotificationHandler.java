@@ -1,6 +1,6 @@
 package notification;
 
-import api.responses.Notification;
+import api.response.Notification;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 

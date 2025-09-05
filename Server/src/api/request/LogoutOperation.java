@@ -1,4 +1,4 @@
-package api.requestOperations;
+package api.request;
 
 /**
  * GSON class for logout operation

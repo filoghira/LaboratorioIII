@@ -1,14 +1,14 @@
-package api.requestOperations;
+package api.request;
 
 import api.values.RegisterAndLoginValues;
 
 /**
- * GSON class for register operation
+ * GSON class for login operation
  */
-public class RegisterOperation extends Operation {
+public class LoginOperation extends Operation {
     private final RegisterAndLoginValues values;
 
-    public RegisterOperation(String o, RegisterAndLoginValues v) {
+    public LoginOperation(String o, RegisterAndLoginValues v) {
         super(o);
         this.values = v;
     }

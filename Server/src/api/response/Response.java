@@ -1,4 +1,4 @@
-package api.responses;
+package api.response;
 
 /**
  * Parent class for an API response

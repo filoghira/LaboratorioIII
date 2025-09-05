@@ -1,6 +1,6 @@
 package order;
 
-import api.responses.Notification;
+import api.response.Notification;
 import api.values.Day;
 import api.values.OrderDirection;
 import api.values.OrderType;

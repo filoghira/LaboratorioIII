@@ -1,4 +1,4 @@
-package api.responses;
+package api.response;
 
 import api.values.Day;
 

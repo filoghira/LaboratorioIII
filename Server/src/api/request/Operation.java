@@ -1,4 +1,4 @@
-package api.requestOperations;
+package api.request;
 
 /**
  * Parent class for every possible operation

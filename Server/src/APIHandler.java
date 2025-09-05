@@ -1,8 +1,8 @@
-import api.requestOperations.*;
-import api.responses.Response;
-import api.responses.ResponseOperation;
-import api.responses.ResponsePriceHistory;
-import api.responses.ResponseUser;
+import api.request.*;
+import api.response.Response;
+import api.response.ResponseOperation;
+import api.response.ResponsePriceHistory;
+import api.response.ResponseUser;
 import api.values.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -1,4 +1,4 @@
-package api.responses;
+package api.response;
 
 /**
  * GSON class for a response to an operation among register, updateCredentials, login, logout and cancelOrder

@@ -1,4 +1,4 @@
-package api.responses;
+package api.response;
 
 /**
  * GSON class for a response among insertMarketOrder, insertLimitOrder and insertStopOrder
