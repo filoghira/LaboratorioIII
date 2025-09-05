@@ -413,9 +413,9 @@ public class OrderHandler {
      * @param user that requested the price history
      * @return HashMap of Days mapped to the day number in the month
      */
-    public ConcurrentHashMap<Integer, Day> getPriceHistory(YearMonth date, User user)  {
+    public HashMap<Integer, Day> getPriceHistory(YearMonth date, User user)  {
         if (user == null) return null;
-        ConcurrentHashMap<Integer, Day> history = new ConcurrentHashMap<>();
+        HashMap<Integer, Day> history = new HashMap<>();
 
         for(Order order : orders.values()) {
             LocalDateTime ldt = LocalDateTime.ofInstant(new Date(order.getTimestamp()).toInstant(), ZoneOffset.UTC);

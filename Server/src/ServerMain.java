@@ -14,6 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("DuplicatedCode")
 public class ServerMain {
 
     private static final Logger logger = Logger.getLogger(ServerMain.class.getName());
