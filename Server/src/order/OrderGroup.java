@@ -31,17 +31,29 @@ public class OrderGroup {
         return size;
     }
 
-    public static void removeOrderFromGroup(OrderGroup orders, Order order, ConcurrentSkipListSet<OrderGroup> askOrders) {
-        if (orders == null | order == null | askOrders == null) {
+    /**
+     * Given a group of orders that are waiting to be executed, if the order that's currently being executed can be
+     * deducted, it's removed from the group. Then, if the group is empty, it's removed from the correspondent SkipList
+     * (either ASK or BID), otherwise the size of the group is adjusted.
+     * @param group Group of orders
+     * @param order Order currently being executed
+     * @param skipListOrders Either the askOrder or bidOrder skip list
+     */
+    public static void removeOrderFromGroup(
+            OrderGroup group,
+            Order order,
+            ConcurrentSkipListSet<OrderGroup> skipListOrders
+    ) {
+        if (group == null | order == null | skipListOrders == null) {
             return;
         }
 
-        if (orders.getPrice() >= order.getPrice()) {
-            orders.getOrders().remove((Integer) order.getOrderId());
-            if (orders.getOrders().isEmpty()) {
-                askOrders.remove(orders);
+        if (group.getPrice() >= order.getPrice()) {
+            group.getOrders().remove((Integer) order.getOrderId());
+            if (group.getOrders().isEmpty()) {
+                skipListOrders.remove(group);
             } else {
-                orders.setSize(orders.getSize() - order.getRemainingSize());
+                group.setSize(group.getSize() - order.getRemainingSize());
             }
         }
     }

@@ -1,6 +1,10 @@
 package api.values;
 
+/**
+ * GSON class for the result of getPriceHistory
+ */
 public class Day {
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private final int day;
     private final int openingPrice;
     private int closingPrice;
@@ -15,9 +19,6 @@ public class Day {
         this.minPrice = minPrice;
     }
 
-    public int getDay() {
-        return this.day;
-    }
     public void setClosingPrice(int closingPrice) {
         this.closingPrice = closingPrice;
     }

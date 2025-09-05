@@ -2,7 +2,10 @@ package api.requestOperations;
 
 import api.values.CancelOrderValues;
 
-public class CancelOrderOperation extends Operation { //classe per le operazioni cancelOrder
+/**
+ * GSON class for insertCancelOrder operation
+ */
+public class CancelOrderOperation extends Operation {
     private final CancelOrderValues values;
 
     public CancelOrderOperation(String o, CancelOrderValues v) {

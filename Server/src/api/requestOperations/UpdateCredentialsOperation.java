@@ -2,7 +2,10 @@ package api.requestOperations;
 
 import api.values.UpdateCredentialsValues;
 
-public class UpdateCredentialsOperation extends Operation { //classe per operazioni updateCredentials
+/**
+ * GSON class for updateCredentials operation
+ */
+public class UpdateCredentialsOperation extends Operation {
     private final UpdateCredentialsValues values;
 
     public UpdateCredentialsOperation(String o, UpdateCredentialsValues v) {

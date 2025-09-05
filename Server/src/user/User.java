@@ -1,25 +1,12 @@
 package user;
 
-import api.responses.Notification;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.sun.corba.se.impl.activation.ServerMain;
 import customExceptions.SamePasswordException;
 import customExceptions.UserLoggedInException;
 import customExceptions.UserNotLoggedInException;
 import customExceptions.WrongPasswordException;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.SocketException;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class User {
     private final String username;
@@ -37,6 +24,12 @@ public class User {
         this.password = password;
     }
 
+    /**
+     * Updates the password of the user
+     * @param oldPassword of the user
+     * @param newPassword of the user
+     * @throws SamePasswordException The new password must be different from the old one
+     */
     public void updatePassword(String oldPassword, String newPassword) throws SamePasswordException {
         if (oldPassword.equals(newPassword)) {
             throw new SamePasswordException();
@@ -45,6 +38,13 @@ public class User {
         password = newPassword;
     }
 
+    /**
+     * Login a user
+     * @param password of the user
+     * @param ip current IP address of the TCP client
+     * @throws UserLoggedInException User already logged in
+     * @throws WrongPasswordException Wrong password
+     */
     public void login(String password, InetAddress ip) throws UserLoggedInException, WrongPasswordException {
         if (loggedIn) {
             throw new UserLoggedInException(username);
@@ -58,6 +58,10 @@ public class User {
         }
     }
 
+    /**
+     * Logout
+     * @throws UserNotLoggedInException If the user is not logged in
+     */
     public void logout() throws UserNotLoggedInException {
         if (!loggedIn) {
             throw new UserNotLoggedInException(username);

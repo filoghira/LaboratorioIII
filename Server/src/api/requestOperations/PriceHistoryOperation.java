@@ -2,7 +2,10 @@ package api.requestOperations;
 
 import api.values.PriceHistoryValues;
 
-public class PriceHistoryOperation extends Operation { //classe per operazioni getPriceHistory
+/**
+ * GSON class for getPriceHistory operation
+ */
+public class PriceHistoryOperation extends Operation {
     private final PriceHistoryValues values;
 
     public PriceHistoryOperation(String o, PriceHistoryValues v) {

@@ -1,6 +1,9 @@
 package api.requestOperations;
 
-public class Operation { //classe che contiene gli attirbuti delle operazioni
+/**
+ * Parent class for every possible operation
+ */
+public class Operation {
     private final String operation;
 
     public Operation(String o) {

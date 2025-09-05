@@ -7,12 +7,16 @@ import com.google.gson.GsonBuilder;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.logging.Logger;
 
 public class NotificationHandler {
 
     public static int port;
 
+    /**
+     * Send a Notification to an address via UDP
+     * @param notification The notification to be sent
+     * @param address Server address
+     */
     public static void sendNotification(Notification notification, InetAddress address) {
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         byte[] data = gson.toJson(notification).getBytes();

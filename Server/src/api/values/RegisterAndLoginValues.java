@@ -1,5 +1,8 @@
 package api.values;
 
+/**
+ * GSON class for the possible values of a login or register request
+ */
 public class RegisterAndLoginValues extends Values{
     private final String username;
     private final String password;

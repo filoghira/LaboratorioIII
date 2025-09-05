@@ -1,5 +1,8 @@
 package api.responses;
 
+/**
+ * GSON class for a response to an operation among register, updateCredentials, login, logout and cancelOrder
+ */
 public class ResponseUser extends Response {
     private final int response;
     private final String errorMessage;

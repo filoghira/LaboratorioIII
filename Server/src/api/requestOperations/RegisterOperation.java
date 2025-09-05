@@ -2,7 +2,10 @@ package api.requestOperations;
 
 import api.values.RegisterAndLoginValues;
 
-public class RegisterOperation extends Operation { //classe per operazioni register che contiene i valori adatti
+/**
+ * GSON class for register operation
+ */
+public class RegisterOperation extends Operation {
     private final RegisterAndLoginValues values;
 
     public RegisterOperation(String o, RegisterAndLoginValues v) {

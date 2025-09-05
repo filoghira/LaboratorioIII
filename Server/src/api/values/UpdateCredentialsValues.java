@@ -1,5 +1,8 @@
 package api.values;
 
+/**
+ * GSON class for the possible values of a updateCredentials request
+ */
 public class UpdateCredentialsValues extends Values{ //classe che contiene i valori per operazioni updateCredentials
     private final String username;
     private final String oldPassword;

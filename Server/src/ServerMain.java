@@ -5,10 +5,8 @@ import user.UserHandler;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
@@ -21,6 +19,7 @@ public class ServerMain {
     private static final Logger logger = Logger.getLogger(ServerMain.class.getName());
 
     public static void main(String[] args) {
+        // Load the server configuration file
         Properties prop = new Properties();
         try {
             prop.load(ServerMain.class.getClassLoader().getResourceAsStream("server.config"));
@@ -36,18 +35,35 @@ public class ServerMain {
         OrderHandler orderHandler = new OrderHandler();
         NotificationHandler.port = Integer.parseInt(prop.getProperty("notification_port"));
 
+        // Recurrent thread to save the data
         Timer dbTimer = new Timer();
         DumbDatabase db = new DumbDatabase(orderHandler, userHandler);
-        dbTimer.scheduleAtFixedRate(db, Integer.parseInt(prop.getProperty("delay")), Integer.parseInt(prop.getProperty("delay")));
+        dbTimer.scheduleAtFixedRate(
+                db,
+                Integer.parseInt(prop.getProperty("delay")),
+                Integer.parseInt(prop.getProperty("delay"))
+        );
 
+        // Recurrent thread to check for inactivity
         Timer userTimeoutTimer = new Timer();
-        user.UserTimeout userTimeout = new user.UserTimeout(userHandler, Integer.parseInt(prop.getProperty("timeout")));
-        userTimeoutTimer.scheduleAtFixedRate(userTimeout, Integer.parseInt(prop.getProperty("timeout_delay")), Integer.parseInt(prop.getProperty("timeout_delay")));
+        user.UserTimeout userTimeout = new user.UserTimeout(
+                userHandler,
+                Integer.parseInt(prop.getProperty("timeout"))
+        );
+        userTimeoutTimer.scheduleAtFixedRate(
+                userTimeout,
+                Integer.parseInt(prop.getProperty("timeout_delay")),
+                Integer.parseInt(prop.getProperty("timeout_delay"))
+        );
 
+        // Create the socket
         try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(prop.getProperty("port")))){
+
+            // What to do when the server is shutting down
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                 try {
                     serverSocket.close();
+                    // Save data
                     db.run();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -56,10 +72,12 @@ public class ServerMain {
 
             ExecutorService executorService = Executors.newCachedThreadPool();
 
+            //noinspection InfiniteLoopStatement
             while (true) {
+                // Create a new thread for each new connection
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    ClientThread clientThread = new ClientThread(clientSocket, userHandler, orderHandler, Integer.parseInt(prop.getProperty("notification_port")));
+                    ClientThread clientThread = new ClientThread(clientSocket, userHandler, orderHandler);
                     executorService.submit(clientThread);
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "Error accepting client connection.", e);

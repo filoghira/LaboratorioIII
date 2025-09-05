@@ -1,5 +1,8 @@
 package api.values;
 
+/**
+ * Parent class for the possible values of market operation
+ */
 public class InsertOrderValues extends Values {
     private final OrderDirection type;
     private final int size;

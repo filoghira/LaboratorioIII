@@ -2,7 +2,10 @@ package api.requestOperations;
 
 import api.values.LimitAndStopOrderValues;
 
-public class LimitOrderOperation extends Operation { //classe per le operazioni insertLimitOrder
+/**
+ * GSON class for insertLimitOrder operation
+ */
+public class LimitOrderOperation extends Operation {
     private final LimitAndStopOrderValues values;
 
     public LimitOrderOperation(String o, LimitAndStopOrderValues v) {

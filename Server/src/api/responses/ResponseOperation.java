@@ -1,5 +1,8 @@
 package api.responses;
 
+/**
+ * GSON class for a response among insertMarketOrder, insertLimitOrder and insertStopOrder
+ */
 public class ResponseOperation extends Response {
     private final int orderID;
 

@@ -22,14 +22,24 @@ public class UserTimeout extends TimerTask {
     @Override
     public void run() {
         userHandler.getLock().lock();
+
+        // For each user check if the last activity time was more than the TIMEOUT
         for (User user : userHandler.getUsers().values()) {
             if (user.isLoggedIn() && (new Date().getTime() - user.getLastActive().getTime()) > TIMEOUT) {
                 try {
                     userHandler.logout(user.getUsername());
                 } catch (UserNotLoggedInException e) {
-                    logger.warning("User " + user.getUsername() + " was not logged in when trying to log out due to timeout.");
+                    logger.warning(
+                            "User " +
+                            user.getUsername() +
+                            " was not logged in when trying to log out due to timeout."
+                    );
                 } catch (UserNotFoundException e) {
-                    logger.warning("User " + user.getUsername() + " not found when trying to log out due to timeout.");
+                    logger.warning(
+                            "User " +
+                            user.getUsername() +
+                            " not found when trying to log out due to timeout."
+                    );
                 }
             }
         }

@@ -12,7 +12,6 @@ import order.OrderHandler;
 import user.User;
 import user.UserHandler;
 
-import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -24,7 +23,17 @@ public class APIHandler {
 
     private static final Logger logger = Logger.getLogger(APIHandler.class.getName());
 
-    public static HandleRequestReturnValue HandleRequest(
+    /**
+     * Handle an API request
+     * @param thread Thread that received the request
+     * @param request The request
+     * @param userHandler User handler
+     * @param currentUser Current user for the thread
+     * @param orderHandler Order handler
+     * @param ip IP address of the TCP connection
+     * @return The response to the API request
+     */
+    public static Response HandleRequest(
             ClientThread thread,
             String request,
             UserHandler userHandler,
@@ -32,6 +41,7 @@ public class APIHandler {
             OrderHandler orderHandler,
             InetAddress ip
     ) {
+        // TypeAdapterFactory to handle the different subtypes of Request
         RuntimeTypeAdapterFactory<Operation> runtimeTypeAdapterFactory =
                 RuntimeTypeAdapterFactory
                         .of(Operation.class, "operation", true)
@@ -52,12 +62,20 @@ public class APIHandler {
                 .create();
 
         Operation oJson = gson.fromJson(request, Operation.class);
-        Response response = null;
+        Response response;
 
-        if (currentUser == null && !oJson.getOperation().equals("login") && !oJson.getOperation().equals("register") && !oJson.getOperation().equals("updateCredentials") && !oJson.getOperation().equals("quit")) {
-            return new HandleRequestReturnValue(new ResponseUser(Response.ERROR, "You must be logged in to perform this operation"), currentUser);
+        // If the user is not logged in and the request can only be performed after that
+        if (
+                currentUser == null
+                && !oJson.getOperation().equals("login")
+                && !oJson.getOperation().equals("register")
+                && !oJson.getOperation().equals("updateCredentials")
+                && !oJson.getOperation().equals("quit")
+        ) {
+            return new ResponseUser(Response.ERROR, "You must be logged in to perform this operation");
         }
 
+        // Call the right function for each request and create the right subtype of response
         switch (oJson.getOperation()) {
             case "register": {
                 RegisterOperation op = gson.fromJson(request, RegisterOperation.class);
@@ -87,6 +105,7 @@ public class APIHandler {
                 LoginOperation op = gson.fromJson(request, LoginOperation.class);
                 RegisterAndLoginValues values = op.getValues();
                 try {
+                    // Set current user in the thread
                     thread.setUser(userHandler.login(values.getUsername(), values.getPassword(), ip));
                     response = new ResponseUser(Response.OK, "Welcome " + values.getUsername());
                 } catch (UserNotFoundException | UserLoggedInException | WrongPasswordException e) {
@@ -96,6 +115,7 @@ public class APIHandler {
             }
             case "logout": {
                 try {
+                    if (currentUser == null) throw new UserNotLoggedInException("null");
                     userHandler.logout(currentUser.getUsername());
                     thread.setUser(null);
                     response = new ResponseUser(Response.OK, "Goodbye " + currentUser.getUsername());
@@ -108,7 +128,12 @@ public class APIHandler {
                 LimitOrderOperation op = gson.fromJson(request, LimitOrderOperation.class);
                 LimitAndStopOrderValues values = op.getValues();
                 try {
-                    int id = orderHandler.insertLimitOrder(values.getType(), values.getSize(), values.getPrice(), currentUser);
+                    int id = orderHandler.insertLimitOrder(
+                            values.getType(),
+                            values.getSize(),
+                            values.getPrice(),
+                            currentUser
+                    );
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | IllegalOrderPriceException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);
@@ -119,7 +144,11 @@ public class APIHandler {
                 MarketOrderOperation op = gson.fromJson(request, MarketOrderOperation.class);
                 MarketOrderValues values = op.getValues();
                 try {
-                    int id = orderHandler.insertMarketOrder(values.getType(), values.getSize(), currentUser);
+                    int id = orderHandler.insertMarketOrder(
+                            values.getType(),
+                            values.getSize(),
+                            currentUser
+                    );
                     logger.log(Level.INFO, "Market order inserted with ID: " + id);
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | OrderNotExecutableException e) {
@@ -131,7 +160,12 @@ public class APIHandler {
                 StopOrderOperation op = gson.fromJson(request, StopOrderOperation.class);
                 LimitAndStopOrderValues values = op.getValues();
                 try {
-                    int id = orderHandler.insertStopOrder(values.getType(), values.getSize(), values.getPrice(), currentUser);
+                    int id = orderHandler.insertStopOrder(
+                            values.getType(),
+                            values.getSize(),
+                            values.getPrice(),
+                            currentUser
+                    );
                     response = new ResponseOperation(id);
                 } catch (IllegalOrderSizeException | IllegalOrderPriceException | OrderNotExecutableException e) {
                     response = new ResponseOperation(Response.ERROR);
@@ -144,7 +178,10 @@ public class APIHandler {
 
                 try {
                     orderHandler.cancelOrder(values.getOrderId(), currentUser);
-                    response = new ResponseUser(Response.OK, "Order with ID " + values.getOrderId() + " cancelled successfully");
+                    response = new ResponseUser(
+                            Response.OK,
+                            "Order with ID " + values.getOrderId() + " cancelled successfully"
+                    );
                 } catch (WrongUserException | OrderAlreadyCompletedException | InvalidOrderException e) {
                     response = new ResponseUser(e.getCode(), e.getMessage());
                 }
@@ -155,11 +192,11 @@ public class APIHandler {
                 PriceHistoryValues values = op.getValues();
 
                 YearMonth month = YearMonth.parse(values.getMonth(), DateTimeFormatter.ofPattern("MMyyyy"));
-                try {
-                    response = new ResponsePriceHistory(Response.OK, "Price history retrieved successfully", orderHandler.getPriceHistory(month, currentUser));
-                } catch (FileNotFoundException e) {
-                    response = new ResponsePriceHistory(Response.ERROR, "Price history not found", null);
-                }
+                response = new ResponsePriceHistory(
+                        Response.OK,
+                        "Price history retrieved successfully",
+                        orderHandler.getPriceHistory(month, currentUser)
+                );
                 break;
             }
             case "quit":
@@ -173,10 +210,11 @@ public class APIHandler {
                 response = new ResponseUser(Response.NOT_HANDLED, "Error while parsing the request");
         }
 
+        // Update the last active timestamp for the current user
         if (currentUser != null) {
             currentUser.setLastActive(new Date());
         }
 
-        return new HandleRequestReturnValue(response, currentUser);
+        return response;
     }
 }

@@ -9,7 +9,6 @@ import user.UserHandler;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,25 +18,25 @@ public class ClientThread implements Runnable{
     private final UserHandler userHandler;
     private User user;
     private final OrderHandler orderHandler;
-    private final int notificationPort;
 
     public void setUser(User user) {
         this.user = user;
     }
 
-    public ClientThread(Socket socket, UserHandler userHandler, OrderHandler orderHandler, int notificationPort) {
+    public ClientThread(Socket socket, UserHandler userHandler, OrderHandler orderHandler) {
         this.socket = socket;
         this.userHandler = userHandler;
         this.orderHandler = orderHandler;
-        this.notificationPort = notificationPort;
     }
 
     @Override
     public void run() {
         logger.log(Level.INFO, "Client thread started");
 
+        // Prepare the reader and the printer for the socket
         BufferedReader in;
         PrintWriter out;
+        //noinspection DuplicatedCode
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
@@ -52,6 +51,7 @@ public class ClientThread implements Runnable{
             return;
         }
 
+        // TypeAdapterFactory to handle the different subtypes of Response
         RuntimeTypeAdapterFactory<Response> runtimeTypeAdapterFactory =
                 RuntimeTypeAdapterFactory
                         .of(Response.class, "operation", true)
@@ -65,26 +65,32 @@ public class ClientThread implements Runnable{
                 .create();
 
         while (true) {
-            String message = "";
+            StringBuilder message = new StringBuilder();
             String line;
             try {
+                // Receive a message
                 line = in.readLine();
                 while (!line.equals("}")) {
-                    message += line;
+                    message.append(line);
                     line = in.readLine();
                 }
-                message += line;
-                
+                message.append(line);
                 logger.log(Level.INFO, "Received message: " + message);
-                HandleRequestReturnValue ret = APIHandler.HandleRequest(this, message, userHandler, user, orderHandler, socket.getInetAddress());
-                if (ret.getResponse() != null) {
-                    out.println(gson.toJson(ret.getResponse()));
-                    logger.log(Level.INFO, "Message sent: " + gson.toJson(ret.getResponse()));
 
-                } else {
-                    logger.log(Level.WARNING, "No response to send");
-                    out.println(gson.toJson("Something went wrong"));
-                }
+                // Handle it
+                Response ret = APIHandler.HandleRequest(
+                        this,
+                        message.toString(),
+                        userHandler,
+                        user,
+                        orderHandler,
+                        socket.getInetAddress()
+                );
+
+                // Answer
+                out.println(gson.toJson(ret));
+                logger.log(Level.INFO, "Message sent: " + gson.toJson(ret));
+
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error reading message", e);
             } catch (QuitException e) {

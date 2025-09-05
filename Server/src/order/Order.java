@@ -5,14 +5,15 @@ import api.values.OrderType;
 import user.User;
 
 public class Order {
-    private int orderId;
-    private OrderDirection type;
-    private OrderType orderType;
-    private int size;
+    private final int orderId;
+    private final OrderDirection type;
+    private final OrderType orderType;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
+    private final int size;
     private int price;
     private long timestamp;
     private transient int remainingSize;
-    private transient User user;
+    private final transient User user;
     private transient boolean done;
 
     public Order(int orderID, OrderDirection type, OrderType orderType, int size, int price, User user) {
@@ -59,6 +60,9 @@ public class Order {
         return remainingSize;
     }
 
+    /**
+     * @return the UNIX timestamp in milliseconds
+     */
     public long getTimestamp() {
         return timestamp*1000;
     }
@@ -67,10 +71,18 @@ public class Order {
         this.price = price;
     }
 
+    /**
+     * Set the timestamp in UNIX time
+     * @param timestamp UNIX time in milliseconds
+     */
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp/1000;
     }
 
+    /**
+     * Removes the executed amount of an order from the remaining size
+     * @param executedSize Amount that has been executed
+     */
     public void updateRemainingSize(int executedSize) {
         if (executedSize <= this.remainingSize) {
             this.remainingSize -= executedSize;

@@ -18,6 +18,7 @@ public class NotificationReceiver extends Thread {
         try {
             byte[] buffer = new byte[1024];
             while (running) {
+                // Wait for notifications
                 DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
                 socket.receive(packet);
                 String message = new String(packet.getData(), 0, packet.getLength());
@@ -32,6 +33,9 @@ public class NotificationReceiver extends Thread {
         }
     }
 
+    /**
+     * Stops the loop and closes the socket
+     */
     public void stopReceiver() {
         running = false;
         socket.close();

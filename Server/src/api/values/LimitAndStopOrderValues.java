@@ -1,5 +1,8 @@
 package api.values;
 
+/**
+ * GSON class for the possible values of a insertLimitOrder or insertStopOrder request
+ */
 public class LimitAndStopOrderValues extends InsertOrderValues{
     private final int price;
 

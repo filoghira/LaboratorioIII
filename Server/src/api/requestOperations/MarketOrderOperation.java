@@ -2,7 +2,10 @@ package api.requestOperations;
 
 import api.values.MarketOrderValues;
 
-public class MarketOrderOperation extends Operation { //classe per le operazioni insertMarketOrder
+/**
+ * GSON class for insertMarketOrder operation
+ */
+public class MarketOrderOperation extends Operation {
     private final MarketOrderValues values;
 
     public MarketOrderOperation(String o, MarketOrderValues v) {

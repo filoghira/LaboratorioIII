@@ -4,10 +4,14 @@ import api.values.Day;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * GSON class for a response to getPriceHistory
+ */
 public class ResponsePriceHistory extends Response{
-    private int code;
-    private String message;
-    private ConcurrentHashMap<Integer, Day> days;
+    private final int code;
+    @SuppressWarnings({"FieldCanBeLocal", "unused"})
+    private final String message;
+    private final ConcurrentHashMap<Integer, Day> days;
 
     public ResponsePriceHistory(int code, String message, ConcurrentHashMap<Integer, Day> days) {
         this.code = code;
@@ -19,23 +23,7 @@ public class ResponsePriceHistory extends Response{
         return days;
     }
 
-    public void setDays(ConcurrentHashMap<Integer, Day> days) {
-        this.days = days;
-    }
-
     public int getCode() {
         return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 }
