@@ -1,18 +1,15 @@
 package order;
 
+import api.responses.Notification;
 import api.values.Day;
 import api.values.OrderDirection;
 import api.values.OrderType;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import customExceptions.*;
 import database.DumbDatabase;
 import user.User;
+import notification.NotificationHandler;
 
-import java.io.BufferedReader;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
@@ -68,7 +65,7 @@ public class OrderHandler {
         Iterator<OrderGroup> it1 = (order.getType() == OrderDirection.ASK ? bidOrders : askOrders).iterator();
         Iterator<OrderGroup> it2 = (order.getType() == OrderDirection.ASK ? askOrders : bidOrders).iterator();
 
-        ArrayList<Order> doneOrders = new ArrayList<>();
+        Set<Order> doneOrders = new HashSet<>();
 
         while (it1.hasNext()) {
             OrderGroup orders = it1.next();
@@ -155,7 +152,9 @@ public class OrderHandler {
             doneOrders.add(order);
         }
 
-        // NotificationHandler.sendNotification(involvedUsers, doneOrders);
+        for (User u : involvedUsers)
+            if (u.isLoggedIn())
+                NotificationHandler.sendNotification(new Notification(doneOrders), u.getLastIP());
 
         checkStopOrders();
     }

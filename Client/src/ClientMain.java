@@ -1,4 +1,4 @@
-import api.requestOperations.Operation;
+import api.requestOperations.*;
 import api.responses.Response;
 import api.responses.ResponseOperation;
 import api.responses.ResponsePriceHistory;
@@ -6,10 +6,14 @@ import api.responses.ResponseUser;
 import api.values.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
+import javax.xml.crypto.Data;
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,8 +34,13 @@ public class ClientMain {
         }
 
         Socket socket = null;
+        DatagramSocket notificationSocket = null;
+        NotificationReceiver notificationReceiver = null;
         try {
             socket = new Socket(prop.getProperty("host"), Integer.parseInt(prop.getProperty("port")));
+            notificationSocket = new DatagramSocket(Integer.parseInt(prop.getProperty("notification_port")));
+            notificationReceiver = new NotificationReceiver(notificationSocket);
+            notificationReceiver.start();
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Error connecting to server.", e);
             System.exit(1);
@@ -77,7 +86,7 @@ public class ClientMain {
                         break;
                     }
                     RegisterAndLoginValues regValues = new RegisterAndLoginValues(words[1], words[2]);
-                    operation = new api.requestOperations.RegisterOperation("register", regValues);
+                    operation = new RegisterOperation("register", regValues);
                     expectedResponse = "ResponseUser";
                     break;
                 case "login":
@@ -86,7 +95,7 @@ public class ClientMain {
                         break;
                     }
                     RegisterAndLoginValues loginValues = new RegisterAndLoginValues(words[1], words[2]);
-                    operation = new api.requestOperations.LoginOperation("login", loginValues);
+                    operation = new LoginOperation("login", loginValues);
                     expectedResponse = "ResponseUser";
                     break;
                 case "logout":
@@ -99,7 +108,7 @@ public class ClientMain {
                         break;
                     }
                     UpdateCredentialsValues updateValues = new UpdateCredentialsValues(words[1], words[2], words[3]);
-                    operation = new api.requestOperations.UpdateCredentialsOperation("updateCredentials", updateValues);
+                    operation = new UpdateCredentialsOperation("updateCredentials", updateValues);
                     expectedResponse = "ResponseUser";
                     break;
                 case "quit":
@@ -107,17 +116,17 @@ public class ClientMain {
                     break;
                 case "insertLimitOrder":
                     LimitAndStopOrderValues limitValues = new LimitAndStopOrderValues(OrderDirection.fromString(words[1]), Integer.parseInt(words[2]), Integer.parseInt(words[3]));
-                    operation = new api.requestOperations.LimitOrderOperation("insertLimitOrder", limitValues);
+                    operation = new LimitOrderOperation("insertLimitOrder", limitValues);
                     expectedResponse = "ResponseOperation";
                     break;
                 case "insertStopOrder":
                     LimitAndStopOrderValues stopValues = new LimitAndStopOrderValues(OrderDirection.fromString(words[1]), Integer.parseInt(words[2]), Integer.parseInt(words[3]));
-                    operation = new api.requestOperations.LimitOrderOperation("insertStopOrder", stopValues);
+                    operation = new LimitOrderOperation("insertStopOrder", stopValues);
                     expectedResponse = "ResponseOperation";
                     break;
                 case "insertMarketOrder":
                     MarketOrderValues marketValues = new MarketOrderValues(OrderDirection.fromString(words[1]), Integer.parseInt(words[2]));
-                    operation = new api.requestOperations.MarketOrderOperation("insertMarketOrder", marketValues);
+                    operation = new MarketOrderOperation("insertMarketOrder", marketValues);
                     expectedResponse = "ResponseOperation";
                     break;
                 case "cancelOrder":
@@ -126,7 +135,7 @@ public class ClientMain {
                         break;
                     }
                     CancelOrderValues cancelValues = new CancelOrderValues(Integer.parseInt(words[1]));
-                    operation = new api.requestOperations.CancelOrderOperation("cancelOrder", cancelValues);
+                    operation = new CancelOrderOperation("cancelOrder", cancelValues);
                     expectedResponse = "ResponseUser";
                     break;
                 case "getPriceHistory":
@@ -135,7 +144,7 @@ public class ClientMain {
                         break;
                     }
                     PriceHistoryValues priceValues = new PriceHistoryValues(words[1]);
-                    operation = new api.requestOperations.PriceHistoryOperation("getPriceHistory", priceValues);
+                    operation = new PriceHistoryOperation("getPriceHistory", priceValues);
                     expectedResponse = "ResponsePriceHistory";
                     break;
                 default:
@@ -167,7 +176,7 @@ public class ClientMain {
                     if (expectedResponse.equals("ResponseUser")) {
                         ResponseUser res = gson.fromJson(jsonResponse, ResponseUser.class);
                         if (res.getResponse() == Response.OK) {
-                            System.out.println("Success: " + res.getErrorMessage());
+                            System.out.println(res.getErrorMessage());
                         } else {
                             System.out.println("Code: " + res.getResponse() + " - Message: " + res.getErrorMessage());
                         }
@@ -203,6 +212,7 @@ public class ClientMain {
 
         try {
             socket.close();
+            notificationReceiver.stopReceiver();
         } catch (IOException e) {
             logger.log(Level.SEVERE, "Error closing socket", e);
         }

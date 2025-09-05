@@ -3,31 +3,32 @@ package notification;
 import api.responses.Notification;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import order.Order;
-import user.User;
 
-import java.io.IOException;
-import java.net.*;
-import java.util.ArrayList;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.util.logging.Logger;
 
 public class NotificationHandler {
+
     public static int port;
 
-    public static void sendNotification(ArrayList<User> users, ArrayList<Order> orders) {
-        for (User user : users) {
-            Notification n = new Notification(orders);
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String json = gson.toJson(n);
+    public static void sendNotification(Notification notification, InetAddress address) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        byte[] data = gson.toJson(notification).getBytes();
 
-            byte[] bytes = json.getBytes();
-            try {
-                DatagramPacket packet = new DatagramPacket(bytes, bytes.length, InetAddress.getByName(user.getLastIP()), port);
-                DatagramSocket socket = new DatagramSocket(port);
-                socket.send(packet);
-                socket.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            DatagramPacket packet = new DatagramPacket(
+                    data,
+                    data.length,
+                    address,
+                    port
+            );
+            socket.send(packet);
+            socket.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

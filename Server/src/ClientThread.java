@@ -1,7 +1,4 @@
-import api.responses.Response;
-import api.responses.ResponseOperation;
-import api.responses.ResponsePriceHistory;
-import api.responses.ResponseUser;
+import api.responses.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
@@ -12,6 +9,7 @@ import user.UserHandler;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,15 +19,17 @@ public class ClientThread implements Runnable{
     private final UserHandler userHandler;
     private User user;
     private final OrderHandler orderHandler;
+    private final int notificationPort;
 
     public void setUser(User user) {
         this.user = user;
     }
 
-    public ClientThread(Socket socket, UserHandler userHandler, OrderHandler orderHandler) {
+    public ClientThread(Socket socket, UserHandler userHandler, OrderHandler orderHandler, int notificationPort) {
         this.socket = socket;
         this.userHandler = userHandler;
         this.orderHandler = orderHandler;
+        this.notificationPort = notificationPort;
     }
 
     @Override
@@ -76,10 +76,14 @@ public class ClientThread implements Runnable{
                 message += line;
                 
                 logger.log(Level.INFO, "Received message: " + message);
-                Response response = APIHandler.HandleRequest(this, message, userHandler, user, orderHandler, socket.getInetAddress().toString());
-                if (response != null) {
-                    out.println(gson.toJson(response));
-                    logger.log(Level.INFO, "Message sent: " + gson.toJson(response));
+                HandleRequestReturnValue ret = APIHandler.HandleRequest(this, message, userHandler, user, orderHandler, socket.getInetAddress());
+                if (ret.getResponse() != null) {
+                    out.println(gson.toJson(ret.getResponse()));
+                    logger.log(Level.INFO, "Message sent: " + gson.toJson(ret.getResponse()));
+
+                } else {
+                    logger.log(Level.WARNING, "No response to send");
+                    out.println(gson.toJson("Something went wrong"));
                 }
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error reading message", e);

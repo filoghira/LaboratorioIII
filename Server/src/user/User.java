@@ -1,20 +1,34 @@
 package user;
 
+import api.responses.Notification;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.sun.corba.se.impl.activation.ServerMain;
 import customExceptions.SamePasswordException;
 import customExceptions.UserLoggedInException;
 import customExceptions.UserNotLoggedInException;
 import customExceptions.WrongPasswordException;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.SocketException;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class User {
     private final String username;
     private String password;
     private transient boolean loggedIn = false;
     private transient Date lastActive;
-    private transient String lastIP;
+    private transient InetAddress lastIP;
 
-    public String getLastIP() {
+    public InetAddress getLastIP() {
         return lastIP;
     }
 
@@ -31,7 +45,7 @@ public class User {
         password = newPassword;
     }
 
-    public void login(String password, String ip) throws UserLoggedInException, WrongPasswordException {
+    public void login(String password, InetAddress ip) throws UserLoggedInException, WrongPasswordException {
         if (loggedIn) {
             throw new UserLoggedInException(username);
         }

@@ -5,9 +5,10 @@ import user.UserHandler;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.DatagramSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.net.SocketException;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.concurrent.ExecutorService;
@@ -17,7 +18,6 @@ import java.util.logging.Logger;
 
 public class ServerMain {
 
-    // TODO: Save logs to a file
     private static final Logger logger = Logger.getLogger(ServerMain.class.getName());
 
     public static void main(String[] args) {
@@ -32,10 +32,9 @@ public class ServerMain {
             System.exit(1);
         }
 
-        NotificationHandler.port = Integer.parseInt(prop.getProperty("notification_port"));
-
         UserHandler userHandler = new UserHandler();
         OrderHandler orderHandler = new OrderHandler();
+        NotificationHandler.port = Integer.parseInt(prop.getProperty("notification_port"));
 
         Timer dbTimer = new Timer();
         DumbDatabase db = new DumbDatabase(orderHandler, userHandler);
@@ -55,17 +54,13 @@ public class ServerMain {
                 }
             }));
 
-            // TODO: Use a custom thread pool
             ExecutorService executorService = Executors.newCachedThreadPool();
-            // TODO: Do I need to keep track of client threads?
-            ArrayList<ClientThread> clientThreads = new ArrayList<>();
 
             while (true) {
                 try {
                     Socket clientSocket = serverSocket.accept();
-                    ClientThread clientThread = new ClientThread(clientSocket, userHandler, orderHandler);
+                    ClientThread clientThread = new ClientThread(clientSocket, userHandler, orderHandler, Integer.parseInt(prop.getProperty("notification_port")));
                     executorService.submit(clientThread);
-                    clientThreads.add(clientThread);
                 } catch (IOException e) {
                     logger.log(Level.SEVERE, "Error accepting client connection.", e);
                 }

@@ -3,6 +3,7 @@ package user;
 import customExceptions.*;
 import database.DumbDatabase;
 
+import java.net.InetAddress;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -62,7 +63,7 @@ public class UserHandler {
         lock.unlock();
     }
 
-    public User login(String username, String password, String ip) throws UserNotFoundException, UserLoggedInException, WrongPasswordException {
+    public User login(String username, String password, InetAddress ip) throws UserNotFoundException, UserLoggedInException, WrongPasswordException {
         lock.lock();
         if (!userExists(username)) {
             lock.unlock();

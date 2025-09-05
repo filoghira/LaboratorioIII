@@ -13,6 +13,7 @@ import user.User;
 import user.UserHandler;
 
 import java.io.FileNotFoundException;
+import java.net.InetAddress;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -23,7 +24,14 @@ public class APIHandler {
 
     private static final Logger logger = Logger.getLogger(APIHandler.class.getName());
 
-    public static Response HandleRequest(ClientThread thread, String request, UserHandler userHandler, User currentUser, OrderHandler orderHandler, String ip) {
+    public static HandleRequestReturnValue HandleRequest(
+            ClientThread thread,
+            String request,
+            UserHandler userHandler,
+            User currentUser,
+            OrderHandler orderHandler,
+            InetAddress ip
+    ) {
         RuntimeTypeAdapterFactory<Operation> runtimeTypeAdapterFactory =
                 RuntimeTypeAdapterFactory
                         .of(Operation.class, "operation", true)
@@ -47,7 +55,7 @@ public class APIHandler {
         Response response = null;
 
         if (currentUser == null && !oJson.getOperation().equals("login") && !oJson.getOperation().equals("register") && !oJson.getOperation().equals("updateCredentials") && !oJson.getOperation().equals("quit")) {
-            return new ResponseUser(Response.ERROR, "You must be logged in to perform this operation");
+            return new HandleRequestReturnValue(new ResponseUser(Response.ERROR, "You must be logged in to perform this operation"), currentUser);
         }
 
         switch (oJson.getOperation()) {
@@ -169,6 +177,6 @@ public class APIHandler {
             currentUser.setLastActive(new Date());
         }
 
-        return response;
+        return new HandleRequestReturnValue(response, currentUser);
     }
 }
