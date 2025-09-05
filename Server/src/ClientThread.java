@@ -128,7 +128,6 @@ public class ClientThread implements Runnable{
                 // Answer
                 out.println(gson.toJson(ret));
                 logger.log(Level.INFO, "Message sent: " + gson.toJson(ret));
-                logger.log(Level.INFO, "Current user: " + user.getUsername());
 
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Error reading message", e);

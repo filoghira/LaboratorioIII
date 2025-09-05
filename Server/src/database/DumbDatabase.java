@@ -46,13 +46,15 @@ public class DumbDatabase extends TimerTask {
 
             String line;
             while ((line = fr.readLine()) != null){
-                // Remove the comma if present
-                if(line.charAt(0) == ',') line = line.substring(1);
-                // End of JSON list reached
-                if(line.charAt(0) == ']') break;
+                if(!line.isEmpty()) {
+                    // Remove the comma if present
+                    if (line.charAt(0) == ',') line = line.substring(1);
+                    // End of JSON list reached
+                    if (line.charAt(0) == ']') break;
 
-                user = gson.fromJson(line, User.class);
-                users.put(user.getUsername(), user);
+                    user = gson.fromJson(line, User.class);
+                    users.put(user.getUsername(), user);
+                }
             }
         } catch (IOException e) {
             return users;
@@ -81,18 +83,20 @@ public class DumbDatabase extends TimerTask {
 
             String line;
             while ((line = fr.readLine()) != null){
-                // Remove comma if present
-                if(line.charAt(0) == ',') line = line.substring(1);
-                // End of JSON list reached
-                if(line.charAt(0) == ']') break;
+                if(!line.isEmpty()) {
+                    // Remove comma if present
+                    if (line.charAt(0) == ',') line = line.substring(1);
+                    // End of JSON list reached
+                    if (line.charAt(0) == ']') break;
 
-                order = gson.fromJson(line, Order.class);
+                    order = gson.fromJson(line, Order.class);
 
-                // Since it was saved, it has been executed
-                order.execute();
+                    // Since it was saved, it has been executed
+                    order.execute();
 
-                orders.put(order.getOrderId(), order);
-                if (order.getOrderId() > maxId) maxId = order.getOrderId();
+                    orders.put(order.getOrderId(), order);
+                    if (order.getOrderId() > maxId) maxId = order.getOrderId();
+                }
             }
         } catch (IOException e) {
             return new LoadOrdersReturnValue(maxId, orders);
