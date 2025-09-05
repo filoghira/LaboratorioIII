@@ -44,18 +44,6 @@ public class ServerMain {
                 Integer.parseInt(prop.getProperty("delay"))
         );
 
-        // Recurrent thread to check for inactivity
-        Timer userTimeoutTimer = new Timer();
-        user.UserTimeout userTimeout = new user.UserTimeout(
-                userHandler,
-                Integer.parseInt(prop.getProperty("timeout"))
-        );
-        userTimeoutTimer.scheduleAtFixedRate(
-                userTimeout,
-                Integer.parseInt(prop.getProperty("timeout_delay")),
-                Integer.parseInt(prop.getProperty("timeout_delay"))
-        );
-
         // Create the socket
         try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(prop.getProperty("port")))){
 

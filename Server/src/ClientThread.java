@@ -9,18 +9,27 @@ import user.UserHandler;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Properties;
+import java.util.Timer;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+@SuppressWarnings("DuplicatedCode")
 public class ClientThread implements Runnable{
     private static final Logger logger = Logger.getLogger(ClientThread.class.getName());
     private final Socket socket;
     private final UserHandler userHandler;
     private User user;
     private final OrderHandler orderHandler;
+    public final ReentrantLock currentUserLock = new ReentrantLock();
 
-    public void setUser(User user) {
+    synchronized public void setUser(User user) {
         this.user = user;
+    }
+
+    synchronized public User getUser() {
+        return user;
     }
 
     public ClientThread(Socket socket, UserHandler userHandler, OrderHandler orderHandler) {
@@ -33,10 +42,21 @@ public class ClientThread implements Runnable{
     public void run() {
         logger.log(Level.INFO, "Client thread started");
 
+        // Load the server configuration file
+        Properties prop = new Properties();
+        try {
+            prop.load(ServerMain.class.getClassLoader().getResourceAsStream("server.config"));
+        } catch (FileNotFoundException e) {
+            logger.log(Level.SEVERE, "Configuration file not found.", e);
+            System.exit(1);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Error reading configuration file.", e);
+            System.exit(1);
+        }
+
         // Prepare the reader and the printer for the socket
         BufferedReader in;
         PrintWriter out;
-        //noinspection DuplicatedCode
         try {
             in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             out = new PrintWriter(socket.getOutputStream(), true);
@@ -50,6 +70,18 @@ public class ClientThread implements Runnable{
             }
             return;
         }
+
+        // Recurrent thread to check for inactivity
+        Timer userTimeoutTimer = new Timer();
+        UserTimeout userTimeout = new UserTimeout(
+                this,
+                Integer.parseInt(prop.getProperty("timeout"))
+        );
+        userTimeoutTimer.scheduleAtFixedRate(
+                userTimeout,
+                Integer.parseInt(prop.getProperty("timeout_delay")),
+                Integer.parseInt(prop.getProperty("timeout_delay"))
+        );
 
         // TypeAdapterFactory to handle the different subtypes of Response
         RuntimeTypeAdapterFactory<Response> runtimeTypeAdapterFactory =
@@ -82,7 +114,6 @@ public class ClientThread implements Runnable{
                         this,
                         message.toString(),
                         userHandler,
-                        user,
                         orderHandler,
                         socket.getInetAddress()
                 );
