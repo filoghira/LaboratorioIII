@@ -197,24 +197,24 @@ public class OrderHandler {
 
         if (!askOrders.isEmpty()) {
             int marketPrice = askOrders.first().getPrice();
-            for (Integer price : setBid) {
+            for (Integer price : setBid)
                 if(marketPrice <= price) {
-                    for (Integer order : stopOrdersBid.get(price)) {
+                    for (Integer order : stopOrdersBid.get(price))
                         executeOrder(orders.get(order));
-                    }
+                } else {
+                    break;
                 }
-            }
         }
 
         if (!bidOrders.isEmpty()) {
             int marketPrice = bidOrders.first().getPrice();
-            for (Integer price : setAsk) {
+            for (Integer price : setAsk)
                 if (marketPrice >= price) {
-                    for (Integer order : stopOrdersAsk.get(price)) {
+                    for (Integer order : stopOrdersAsk.get(price))
                         executeOrder(orders.get(order));
-                    }
+                } else {
+                    break;
                 }
-            }
         }
     }
 
