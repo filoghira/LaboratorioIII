@@ -198,8 +198,8 @@ public class OrderHandler {
         if (!askOrders.isEmpty()) {
             int marketPrice = askOrders.first().getPrice();
             for (Integer price : setBid) {
-                if(price <= marketPrice) {
-                    for (Integer order : stopOrdersAsk.get(price)) {
+                if(marketPrice <= price) {
+                    for (Integer order : stopOrdersBid.get(price)) {
                         executeOrder(orders.get(order));
                     }
                 }
@@ -209,8 +209,8 @@ public class OrderHandler {
         if (!bidOrders.isEmpty()) {
             int marketPrice = bidOrders.first().getPrice();
             for (Integer price : setAsk) {
-                if (price >= marketPrice) {
-                    for (Integer order : stopOrdersBid.get(price)) {
+                if (marketPrice >= price) {
+                    for (Integer order : stopOrdersAsk.get(price)) {
                         executeOrder(orders.get(order));
                     }
                 }
@@ -329,7 +329,8 @@ public class OrderHandler {
      * Remove a StopOrder
      * @param order to be removed
      */
-    private void removeStop(Order order) {
+    private void removeStop(Order order) throws OrderAlreadyCompletedException {
+        if (order.isDone()) throw new OrderAlreadyCompletedException(order.getOrderId());
         switch (order.getType()) {
             case ASK:
                 stopOrdersAsk.get(order.getPrice()).remove((Integer) order.getOrderId());
